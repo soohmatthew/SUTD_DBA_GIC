@@ -1,6 +1,7 @@
 # SUTD_DBA_GIC
-## <i>Repository for 40.011 : Data and Business Analytics Project, in collaboration with GIC </i>
-## <i>Investment Insights with NLP (GIC) </i>
+## <i>Investment Insights with NLP (GIC) 
+  
+  Repository for 40.011 : Data and Business Analytics Project, in collaboration with GIC. </i>
 
 ## Group Members:
 1. Matthew Soh
