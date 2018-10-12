@@ -130,7 +130,7 @@ def amazon_scrape_to_df(keyword):
 
     for asin in list_of_asin:
         print("Scraping from... https://www.amazon.com/dp/{}".format(asin))
-        max_page_num = get_max_page_num(asin)
+        max_page_num = amazon_get_max_page_num(asin)
         print('{} pages found...'.format(max_page_num))
         reviews_df = amazon_review_scraper(asin, max_page_num)
         output_df = output_df.append(reviews_df, ignore_index = True)
