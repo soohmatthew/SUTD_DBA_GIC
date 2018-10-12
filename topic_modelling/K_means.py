@@ -7,15 +7,6 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.cluster import KMeans
 import pandas as pd
 
-# amazon_example = pd.read_excel("amazon output.xlsx")
-# amazon_example = amazon_example[(amazon_example['Rating'] == 1)]
-# documents = amazon_example.head(100)['User Comment'].tolist()
-
-DF = pd.read_excel(r"C:\Users\Dell\OneDrive\Documents\School\SUTD ESD Sem 1\Data and Business Analytics 40.011\Project\output corpus\amazon output.xlsx")
-NUMBER_OF_TOPICS = 3
-NUMBER_OF_WORDS = 5
-LIST_OF_ADDITIONAL_STOP_WORDS = ["coffee", "machine"]
-
 def build_single_K_means_model(df, brand_name, num_topics, num_words, LIST_OF_ADDITIONAL_STOP_WORDS = [], positive_reviews = True):
         topic_model = pd.DataFrame()
         if positive_reviews:
@@ -24,9 +15,13 @@ def build_single_K_means_model(df, brand_name, num_topics, num_words, LIST_OF_AD
                 document = df[(df["Rating"] == 1)]["User Comment"].tolist()
         if len(document) <= num_words:
                 return None
-        else:
+        else:   
+                # Ensure that only strings are passed in
+                document = [str(doc) for doc in document]
+
+                # Accommodate extra words that you want to exclude from the model
                 stop_words = text.ENGLISH_STOP_WORDS.union(LIST_OF_ADDITIONAL_STOP_WORDS)
-                vectorizer = TfidfVectorizer(stop_words = "english")
+                vectorizer = TfidfVectorizer(stop_words = stop_words)
                 X = vectorizer.fit_transform(document)
 
                 model = KMeans(n_clusters=num_topics, init='k-means++', max_iter=100, n_init=1)
@@ -49,7 +44,7 @@ def build_single_K_means_model(df, brand_name, num_topics, num_words, LIST_OF_AD
                 return topic_model
 
 def K_means_topic_modeller(df, num_topics = 3, num_words = 10, LIST_OF_ADDITIONAL_STOP_WORDS = []):
-        writer = pd.ExcelWriter('K Means Topic Model.xlsx')
+        writer = pd.ExcelWriter('topic model results/K Means Topic Model.xlsx')
         list_of_topic_model = []
         list_of_brands = df["Brand"].unique()
         for type_of_review in [True, False]:

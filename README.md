@@ -68,7 +68,7 @@ We use three different algorithms to produce the topic models:
 
 3. k-means Clustering
 
-Topic modelling process will take 5-10 min, depending on how much data there is to process.
+Topic modelling process will take ~15 min, depending on how much data there is to process.
 
 #### Topic Modelling: Expected Output
 

@@ -22,7 +22,7 @@ def build_single_LSA_model(df, brand_name, number_of_topics, LIST_OF_ADDITIONAL_
     # Text Preprocessing
 
     def clean(doc):
-
+        doc = str(doc)
         stop = set(stopwords.words('english'))
         for additional_word in LIST_OF_ADDITIONAL_STOP_WORDS:
             stop.add(additional_word)
@@ -55,16 +55,9 @@ def build_single_LSA_model(df, brand_name, number_of_topics, LIST_OF_ADDITIONAL_
         print("Not enough data")
         return None
 
-DF = pd.read_excel(r"C:\Users\Dell\OneDrive\Documents\School\SUTD ESD Sem 1\Data and Business Analytics 40.011\Project\output corpus\amazon output.xlsx")
-NUMBER_OF_TOPICS = 3
-NUMBER_OF_WORDS = 5
-
-#print(build_single_LSA_model(DF, "Mr. Coffee", NUMBER_OF_TOPICS, positive_reviews = True).print_topics(NUMBER_OF_TOPICS, NUMBER_OF_WORDS))
-
-
 def LSA_topic_modeller(df, num_topics = 3, num_words = 10, LIST_OF_ADDITIONAL_STOP_WORDS = []):
     list_of_brands = df["Brand"].unique()
-    writer = pd.ExcelWriter('LSA Topic Model.xlsx')
+    writer = pd.ExcelWriter('topic model results/LSA Topic Model.xlsx')
     for type_of_review in [True, False]:
         topic_model = pd.DataFrame()
         if type_of_review:

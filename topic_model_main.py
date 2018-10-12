@@ -8,7 +8,7 @@ from topic_modelling.K_means import *
 current_dir = os.getcwd()
 
 
-DF = pd.read_excel(r"{}\output corpus\amazon output.xlsx".format(current_dir))
+DF = pd.read_excel(r"{}\output corpus\Customer Reviews of coffee machine.xlsx".format(current_dir))
 NUMBER_OF_TOPICS = 3
 NUMBER_OF_WORDS = 5
 LIST_OF_ADDITIONAL_STOP_WORDS = ["coffee", "machine"]

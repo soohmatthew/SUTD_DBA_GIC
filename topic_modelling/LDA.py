@@ -18,7 +18,7 @@ def build_single_LDA_model(df, brand_name, number_of_topics,  LIST_OF_ADDITIONAL
 
     # Text Preprocessing
     def clean(doc):
-
+        doc = str(doc)
         stop = set(stopwords.words('english'))
         for additional_word in LIST_OF_ADDITIONAL_STOP_WORDS:
             stop.add(additional_word)
@@ -53,7 +53,7 @@ def build_single_LDA_model(df, brand_name, number_of_topics,  LIST_OF_ADDITIONAL
 
 def LDA_topic_modeller(df, num_topics = 3, num_words = 10, LIST_OF_ADDITIONAL_STOP_WORDS = []):
     list_of_brands = df["Brand"].unique()
-    writer = pd.ExcelWriter('LDA Topic Model.xlsx')
+    writer = pd.ExcelWriter('topic model results/LDA Topic Model.xlsx')
     for type_of_review in [True, False]:
         topic_model = pd.DataFrame()
         if type_of_review:
@@ -76,7 +76,6 @@ def LDA_topic_modeller(df, num_topics = 3, num_words = 10, LIST_OF_ADDITIONAL_ST
         topic_model.to_excel(writer, 'LDA Topic Model {}'.format(type_of_review_str))
     writer.save()
     return
-
 
 # # To be used only from Jupyter notebook
 # import pyLDAvis.gensim
