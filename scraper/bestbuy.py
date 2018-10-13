@@ -13,6 +13,7 @@ Created on Wed Oct  3 01:11:55 2018
 
 #Standard library imports
 from urllib.request import urlopen as uReq
+import pickle
 
 #Third party imports
 import pandas as pd
@@ -102,12 +103,13 @@ def bestbuy_scrape_to_df(keyword):
             #get review details
             reviewDetailsRaw = productcontainer.findAll("p",{"class":"pre-white-space"})
             review = reviewDetailsRaw[0].text.replace('\n\n','')
-            
-            review_dict = {'Brand' : brand,
-                    'Product Name' : productName,
-                    'Review Date' : date,
-                    'Review Ratings' : rating,
-                    'Product Reviews' : review}
+
+            review_dict = {'Name' : productName,
+                           'Rating' : rating,
+                           'User Comment' : review,
+                           'Date' : date,
+                           'Brand' : brand,
+                           'Source' : "Best Buy"}
             
             reviews_df = reviews_df.append(review_dict, ignore_index=True)
     with open('pickle_files/bestbuy_web_scrape.pickle', 'wb') as handle:
