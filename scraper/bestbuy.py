@@ -14,6 +14,7 @@ Created on Wed Oct  3 01:11:55 2018
 #Standard library imports
 from urllib.request import urlopen as uReq
 import pickle
+import os
 
 #Third party imports
 import pandas as pd
@@ -112,6 +113,8 @@ def bestbuy_scrape_to_df(keyword):
                            'Source' : "Best Buy"}
             
             reviews_df = reviews_df.append(review_dict, ignore_index=True)
+    if not os.path.exists("pickle_files"):
+        os.mkdir("pickle_files")
     with open('pickle_files/bestbuy_web_scrape.pickle', 'wb') as handle:
         pickle.dump(reviews_df, handle, protocol=pickle.HIGHEST_PROTOCOL)
     return reviews_df       

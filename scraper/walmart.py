@@ -9,6 +9,7 @@ Created on Fri Sep 28 00:27:18 2018
 #Standard library imports
 from urllib.request import urlopen as uReq
 import pickle
+import os
 
 #Third party imports
 from bs4 import BeautifulSoup as soup
@@ -123,6 +124,8 @@ def walmart_scrape_to_df(keyword):
                     continue
         except:
             continue
+    if not os.path.exists("pickle_files"):
+        os.mkdir("pickle_files")
     with open('pickle_files/walmart_web_scrape.pickle', 'wb') as handle:
         pickle.dump(reviews_df, handle, protocol=pickle.HIGHEST_PROTOCOL)
     return reviews_df
