@@ -54,8 +54,10 @@ def amazon_get_max_page_num(ASIN):
     page_numbers = parser.xpath(xpath_page_number)
 
     page_numbers = [int(page_num) for page_num in page_numbers]
-    last_page_num = max(page_numbers, default = 5)
-
+    if len(page_numbers) == 0:
+        last_page_num = 1
+    else:
+        last_page_num = max(page_numbers)
     return last_page_num
 
 # amazon_review_scraper scraps for reviews, based on the ASIN given, and the number of pages it is going to scrape.
