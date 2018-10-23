@@ -187,7 +187,7 @@ def amazon_scrape_to_df_multithreading(keyword):
 
     print("{} products found... ".format(str(len(list_of_asin))))
     list_of_asin_and_ua = [(asin, ua.random) for asin in list_of_asin]
-
+    
     output_df = Manager().list()
 
     with Pool(processes= cpu_count() * 2) as pool:
