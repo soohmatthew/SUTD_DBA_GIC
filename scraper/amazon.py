@@ -149,7 +149,7 @@ def amazon_review_scraper(ASIN, number_of_pages, user_agent_str):
 def amazon_scrape_to_df(keyword):
     # Fake User Agent library is used, so that the User Agent is randomized, so as to be able to circumvent IP bans. 
     # It will make the code run slightly slower, but we are able to yield better results.
-    ua = UserAgent()
+    ua = UserAgent(cache=False)
     list_of_asin = amazon_get_asin(keyword, ua.random)
     print("{} products found... ".format(str(len(list_of_asin))))
     output_df = pd.DataFrame()
@@ -181,13 +181,13 @@ def amazon_scrape_to_df_multithreading(keyword):
     # Fake User Agent library is used, so that the User Agent is randomized, so as to be able to circumvent IP bans. 
     # It will make the code run slightly slower, but we are able to yield better results.
     
-    ua = UserAgent()
+    ua = UserAgent(cache=False)
     from multiprocessing import Pool, cpu_count, Manager
     list_of_asin = amazon_get_asin(keyword, ua.random)
 
     print("{} products found... ".format(str(len(list_of_asin))))
     list_of_asin_and_ua = [(asin, ua.random) for asin in list_of_asin]
-    
+
     output_df = Manager().list()
 
     with Pool(processes= cpu_count() * 2) as pool:
@@ -202,7 +202,3 @@ def amazon_scrape_to_df_multithreading(keyword):
     with open('pickle_files/amazon_web_scrape.pickle', 'wb') as handle:
         pickle.dump(output_df, handle, protocol=pickle.HIGHEST_PROTOCOL)
     return output_df
-
-
-if __name__ == "__main__":
-    print(amazon_scrape_to_df("coffee machine"))

@@ -24,7 +24,7 @@ def walmart_search(keyword):
     search_inp += str(keyword[-1])
     x = 1
     search_pages = []
-    while x <= 1: #change the number here to varies the number of pages you want to scrap
+    while x <= 20: #change the number here to varies the number of pages you want to scrap
         link = 'https://www.walmart.com/search/?page=' + str(x) + '&ps=40&query='  + search_inp + '#searchProductResult'
         search_pages.append(link)
         x += 1

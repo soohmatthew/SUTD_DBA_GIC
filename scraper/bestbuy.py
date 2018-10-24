@@ -31,7 +31,7 @@ def bestbuy_search(keyword):
     search_inp += str(product[-1])
     x = 1
     search_pages = []
-    while x <= 1: #change this number based on how many pages of products to scrape
+    while x <= 20: #change this number based on how many pages of products to scrape
         link = 'https://www.bestbuy.com/site/searchpage.jsp?cp=' + str(x) + '&intl=nosplash&st='  + search_inp 
         search_pages.append(link)
         x += 1
@@ -62,7 +62,7 @@ def bestbuy_product_review_url(keyword):
     product_url = []
     for i in range(len(product_id)):
         x = 1
-        while x <= 2: #change this number based on how many pages of reviews to scrape
+        while x <= 20: #change this number based on how many pages of reviews to scrape
             urlWithPages = 'https://www.bestbuy.com/site/reviews/' + str(product_id[i]) + '?page=' + str(x)
             product_url.append(urlWithPages)
             x += 1
@@ -74,45 +74,48 @@ def bestbuy_scrape_to_df(keyword):
     my_url_all = bestbuy_product_review_url(keyword)
     
     for n in range(len(my_url_all)):
-        my_url = my_url_all[n]
-        print(my_url)
-        uClient = uReq(my_url)
-        page_html = uClient.read()
-        uClient.close()
+        try:
+            my_url = my_url_all[n]
+            print(my_url)
+            uClient = uReq(my_url)
+            page_html = uClient.read()
+            uClient.close()
 
-        page_soup = soup(page_html, 'html.parser')
-        
-        #get product name
-        productName = page_soup.find('h2', {'class':"product-title"}).a.text
-        print(productName)
-        
-        #get brand name
-        brand = str(productName).split('-')[0]
-        
-        productcontainers = page_soup.findAll("div", {"class":"col-xs-12 col-md-9"})
-        
-        for productcontainer in productcontainers:
+            page_soup = soup(page_html, 'html.parser')
             
-            #get review date
-            review_date = productcontainer.findAll("time", {"class":"submission-date"})
-            date = review_date[0].text
+            #get product name
+            productName = page_soup.find('h2', {'class':"product-title"}).a.text
+            print(productName)
             
-            #get ratings
-            reviewRating = productcontainer.findAll("p", {"class":"sr-only"})
-            rating = reviewRating[0].text
+            #get brand name
+            brand = str(productName).split('-')[0]
             
-            #get review details
-            reviewDetailsRaw = productcontainer.findAll("p",{"class":"pre-white-space"})
-            review = reviewDetailsRaw[0].text.replace('\n\n','')
+            productcontainers = page_soup.findAll("div", {"class":"col-xs-12 col-md-9"})
+            
+            for productcontainer in productcontainers:
+                
+                #get review date
+                review_date = productcontainer.findAll("time", {"class":"submission-date"})
+                date = review_date[0].text
+                
+                #get ratings
+                reviewRating = productcontainer.findAll("p", {"class":"sr-only"})
+                rating = reviewRating[0].text
+                
+                #get review details
+                reviewDetailsRaw = productcontainer.findAll("p",{"class":"pre-white-space"})
+                review = reviewDetailsRaw[0].text.replace('\n\n','')
 
-            review_dict = {'Name' : productName,
-                           'Rating' : rating,
-                           'User Comment' : review,
-                           'Date' : date,
-                           'Brand' : brand,
-                           'Source' : "Best Buy"}
-            
-            reviews_df = reviews_df.append(review_dict, ignore_index=True)
+                review_dict = {'Name' : productName,
+                            'Rating' : rating,
+                            'User Comment' : review,
+                            'Date' : date,
+                            'Brand' : brand,
+                            'Source' : "Best Buy"}
+                
+                reviews_df = reviews_df.append(review_dict, ignore_index=True)
+        except:
+            continue    
     if not os.path.exists("pickle_files"):
         os.mkdir("pickle_files")
     with open('pickle_files/bestbuy_web_scrape.pickle', 'wb') as handle:

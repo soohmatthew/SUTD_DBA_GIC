@@ -1,22 +1,28 @@
+#Standard library imports
 import os
 
-from topic_modelling.LDA import *
-from topic_modelling.LSA import *
-from topic_modelling.K_means import *
+#Python File Imports
+from topic_modelling.LDA_1 import *
 
 #Define the parameters of the model
 current_dir = os.getcwd()
+LIST_OF_ADDITIONAL_STOP_WORDS = ['the', 'of', 'and', 'a', 'to', 'in', 'is', 'you', 'that', 'it', 'he', 'was',
+                            'for', 'on', 'are', 'as', 'with', 'his', 'they', 'I', '', 'at', 'be', 'this',
+                            'have', 'from', 'or', 'one', 'had', 'by', 'word', 'but', 'not', 'what', 'all',
+                            'were', 'we', 'when', 'your', 'can', 'said', '', 'there', 'use', 'an', 'each',
+                            'which', 'she', 'do', 'how', 'their', 'if', 'will', 'up', 'other', 'about',
+                            'out', 'many', 'then', 'them', 'these', 'so', '', 'some', 'her', 'would',
+                            'make', 'like', 'him', 'into', 'time', 'has', 'look', 'two', 'more', 'write',
+                            'go', 'see', 'number', 'no', 'way', 'could', 'people', '', 'my', 'than', 
+                            'first', 'water', 'been', 'call', 'who', 'oil', 'its', 'now', 'find', 'long',
+                            'down', 'day', 'did', 'get', 'come', 'made', 'may', 'part', 'coffee', 'machine']
 
+DF = pd.read_excel("output corpus/Customer Reviews of coffee machine.xlsx")
+LIST_OF_COMMON_WORDS = ["good", 'bad', 'love']
 
-DF = pd.read_excel(r"{}\output corpus\Customer Reviews of coffee machine.xlsx".format(current_dir))
-NUMBER_OF_TOPICS = 3
-NUMBER_OF_WORDS = 5
-LIST_OF_ADDITIONAL_STOP_WORDS = ["coffee", "machine"]
-
-def main(DF, NUMBER_OF_TOPICS, NUMBER_OF_WORDS):
-    LDA_topic_modeller(DF, num_topics = NUMBER_OF_TOPICS, num_words = NUMBER_OF_WORDS, LIST_OF_ADDITIONAL_STOP_WORDS = LIST_OF_ADDITIONAL_STOP_WORDS)
-    LSA_topic_modeller(DF, num_topics = NUMBER_OF_TOPICS, num_words = NUMBER_OF_WORDS, LIST_OF_ADDITIONAL_STOP_WORDS = LIST_OF_ADDITIONAL_STOP_WORDS)
-    K_means_topic_modeller(DF, num_topics = NUMBER_OF_TOPICS, num_words = NUMBER_OF_WORDS, LIST_OF_ADDITIONAL_STOP_WORDS = LIST_OF_ADDITIONAL_STOP_WORDS)
+def main(DF, LIST_OF_ADDITIONAL_STOP_WORDS, LIST_OF_COMMON_WORDS):
+    LDA_topic_modeller(DF, LIST_OF_ADDITIONAL_STOP_WORDS, LIST_OF_COMMON_WORDS)
 
 if __name__ == '__main__':
-    main(DF, NUMBER_OF_TOPICS, NUMBER_OF_WORDS)
+    main(DF, LIST_OF_ADDITIONAL_STOP_WORDS, LIST_OF_COMMON_WORDS)
+
