@@ -20,7 +20,6 @@ def clean(doc, LIST_OF_ADDITIONAL_STOP_WORDS):
     stop = set(stopwords.words('english'))
     for additional_word in LIST_OF_ADDITIONAL_STOP_WORDS:
         stop.add(additional_word)
-    #stop.add(brand_name.lower())
     
     # For removing punctuations
     exclude = set(string.punctuation)
@@ -33,12 +32,12 @@ def clean(doc, LIST_OF_ADDITIONAL_STOP_WORDS):
     return normalized
 
 def Preprocessing(df, LIST_OF_ADDITIONAL_STOP_WORDS, LIST_OF_COMMON_WORDS):
-    dictionary_of_synonyms = OrderedDict()
+
+    # If the word is in the list of common words, word and its synonyms will be added to list of stop words to be removed. 
     for word in LIST_OF_COMMON_WORDS:
         for syn in wordnet.synsets(word): 
             for l in syn.lemmas(): 
-                dictionary_of_synonyms[l.name()] = word
-    
+                LIST_OF_ADDITIONAL_STOP_WORDS.append(l.name())
 
     processed_data = OrderedDict()
     list_of_brands = df["Brand"].unique()
@@ -49,13 +48,11 @@ def Preprocessing(df, LIST_OF_ADDITIONAL_STOP_WORDS, LIST_OF_COMMON_WORDS):
 
         doc_complete_positive = df[(df['Brand'] == brand) & (df['Rating'] == 5)]["User Comment"].tolist()
         doc_clean_positive = [clean(doc, LIST_OF_ADDITIONAL_STOP_WORDS).split() for doc in doc_complete_positive]
-        doc_clean_syn_positive = [[dictionary_of_synonyms.get(word, word) for word in list_of_words] for list_of_words in doc_clean_positive]
-        doc_clean_num_positive = [[word for word in list_of_words if not word.isdigit()] for list_of_words in doc_clean_syn_positive]
+        doc_clean_num_positive = [[word for word in list_of_words if not word.isdigit()] for list_of_words in doc_clean_positive]
 
         doc_complete_negative = df[(df['Brand'] == brand) & (df['Rating'] == 1)]["User Comment"].tolist()
         doc_clean_negative = [clean(doc, LIST_OF_ADDITIONAL_STOP_WORDS).split() for doc in doc_complete_negative]
-        doc_clean_syn_negative = [[dictionary_of_synonyms.get(word, word) for word in list_of_words] for list_of_words in doc_clean_negative]
-        doc_clean_num_negative = [[word for word in list_of_words if not word.isdigit()] for list_of_words in doc_clean_syn_negative]
+        doc_clean_num_negative = [[word for word in list_of_words if not word.isdigit()] for list_of_words in doc_clean_negative]
 
         positive_negative_dict["Positive"] = doc_clean_num_positive
         positive_negative_dict["Negative"] = doc_clean_num_negative
