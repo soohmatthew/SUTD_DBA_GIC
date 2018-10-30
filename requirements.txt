@@ -1,7 +1,13 @@
-pandas==0.23.0
 requests==2.18.4
-nltk==3.3
+openpyxl==2.5.3
+numpy==1.15.3
 lxml==4.2.1
+nltk==3.3
+spacy==2.0.16
+pandas==0.23.0
+textblob==0.15.1
+fake_useragent==0.1.11
 gensim==3.6.0
 beautifulsoup4==4.6.3
+python_dateutil==2.7.5
 scikit_learn==0.20.0
