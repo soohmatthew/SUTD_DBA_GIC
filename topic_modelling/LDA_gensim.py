@@ -38,6 +38,7 @@ def Preprocessing(df, LIST_OF_ADDITIONAL_STOP_WORDS, LIST_OF_COMMON_WORDS):
         for syn in wordnet.synsets(word): 
             for l in syn.lemmas(): 
                 LIST_OF_ADDITIONAL_STOP_WORDS.append(l.name())
+                print(l.name())
 
     processed_data = OrderedDict()
     list_of_brands = df["Brand"].unique()
@@ -132,7 +133,7 @@ if __name__ == "__main__":
                                 'first', 'water', 'been', 'call', 'who', 'oil', 'its', 'now', 'find', 'long',
                                 'down', 'day', 'did', 'get', 'come', 'made', 'may', 'part', 'coffee', 'machine'] 
     DF = pd.read_excel("output corpus/Customer Reviews of coffee machine.xlsx")
-    LIST_OF_COMMON_WORDS = ["good", 'bad', 'love']
+    LIST_OF_COMMON_WORDS = ["good", "great", "love"]
     LDA_topic_modeller(DF, LIST_OF_ADDITIONAL_STOP_WORDS, LIST_OF_COMMON_WORDS)
 
 # # To be used only from Jupyter notebook

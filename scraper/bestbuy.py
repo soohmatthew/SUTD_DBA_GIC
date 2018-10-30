@@ -31,7 +31,7 @@ def bestbuy_search(keyword):
     search_inp += str(product[-1])
     x = 1
     search_pages = []
-    while x <= 20: #change this number based on how many pages of products to scrape
+    while x <= 2: #change this number based on how many pages of products to scrape
         link = 'https://www.bestbuy.com/site/searchpage.jsp?cp=' + str(x) + '&intl=nosplash&st='  + search_inp 
         search_pages.append(link)
         x += 1
@@ -111,6 +111,7 @@ def bestbuy_scrape_to_df(keyword):
                             'User Comment' : review,
                             'Date' : date,
                             'Brand' : brand,
+                            'Usefulness': 0,
                             'Source' : "Best Buy"}
                 
                 reviews_df = reviews_df.append(review_dict, ignore_index=True)
@@ -121,3 +122,77 @@ def bestbuy_scrape_to_df(keyword):
     with open('pickle_files/bestbuy_web_scrape.pickle', 'wb') as handle:
         pickle.dump(reviews_df, handle, protocol=pickle.HIGHEST_PROTOCOL)
     return reviews_df       
+
+def bestbuy_scrape_to_df_multi(keyword):
+    
+    my_url_all = bestbuy_product_review_url(keyword)
+    
+    from multiprocessing import Pool, cpu_count, Manager
+
+    print("{} products found... ".format(str(len(my_url_all))))
+            
+    output_df = Manager().list()
+
+    with Pool(processes= cpu_count() * 2) as pool:
+        review_df = pool.map(bestbuy_scrape_one, my_url_all)
+        
+    output_df = output_df.append(review_df)
+    #final_output = pd.concat(output_df)
+    pool.terminate()
+    pool.join()
+    print(output_df)
+    if not os.path.exists("pickle_files"):
+        os.mkdir("pickle_files")
+    with open('pickle_files/bestbuy_web_scrape.pickle', 'wb') as handle:
+        pickle.dump(output_df, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+def bestbuy_scrape_one(my_url):
+    reviews_df = pd.DataFrame()
+    try:
+        my_url
+        print(my_url)
+        uClient = uReq(my_url)
+        page_html = uClient.read()
+        uClient.close()
+
+        page_soup = soup(page_html, 'html.parser')
+        
+        #get product name
+        productName = page_soup.find('h2', {'class':"product-title"}).a.text
+        print(productName)
+        
+        #get brand name
+        brand = str(productName).split('-')[0]
+        
+        productcontainers = page_soup.findAll("div", {"class":"col-xs-12 col-md-9"})
+        
+        for productcontainer in productcontainers:
+            
+            #get review date
+            review_date = productcontainer.findAll("time", {"class":"submission-date"})
+            date = review_date[0].text
+            
+            #get ratings
+            reviewRating = productcontainer.findAll("p", {"class":"sr-only"})
+            rating = reviewRating[0].text
+            
+            #get review details
+            reviewDetailsRaw = productcontainer.findAll("p",{"class":"pre-white-space"})
+            review = reviewDetailsRaw[0].text.replace('\n\n','')
+
+            review_dict = {'Name' : productName,
+                        'Rating' : rating,
+                        'User Comment' : review,
+                        'Date' : date,
+                        'Brand' : brand,
+                        'Usefulness': 0,
+                        'Source' : "Best Buy"}
+            
+            reviews_df = reviews_df.append(review_dict, ignore_index=True)
+            
+    except:
+        reviews_df = pd.DataFrame()    
+    return reviews_df 
+          
+if __name__ == "__main__":
+    bestbuy_scrape_to_df_multi("coffee machine")

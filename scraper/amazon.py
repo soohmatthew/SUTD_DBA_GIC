@@ -149,7 +149,7 @@ def amazon_review_scraper(ASIN, number_of_pages, user_agent_str):
 def amazon_scrape_to_df(keyword):
     # Fake User Agent library is used, so that the User Agent is randomized, so as to be able to circumvent IP bans. 
     # It will make the code run slightly slower, but we are able to yield better results.
-    ua = UserAgent(cache=False)
+    ua = UserAgent(verify_ssl=False)
     list_of_asin = amazon_get_asin(keyword, ua.random)
     print("{} products found... ".format(str(len(list_of_asin))))
     output_df = pd.DataFrame()
@@ -181,7 +181,7 @@ def amazon_scrape_to_df_multithreading(keyword):
     # Fake User Agent library is used, so that the User Agent is randomized, so as to be able to circumvent IP bans. 
     # It will make the code run slightly slower, but we are able to yield better results.
     
-    ua = UserAgent(cache=False)
+    ua = UserAgent(cache=False, verify_ssl=False)
     from multiprocessing import Pool, cpu_count, Manager
     list_of_asin = amazon_get_asin(keyword, ua.random)
 

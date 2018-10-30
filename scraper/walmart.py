@@ -118,6 +118,7 @@ def walmart_scrape_to_df(keyword):
                             'User Comment': str(review_title[m].replace(",","/") + review_details[m].replace('\n','').replace(',','/')),
                             'Date': str(date[m]),
                             'Brand': brand_name,
+                            'Usefulness': 0,
                             'Source': "Walmart"}
                     reviews_df = reviews_df.append(review_dict, ignore_index=True)
                 except:
