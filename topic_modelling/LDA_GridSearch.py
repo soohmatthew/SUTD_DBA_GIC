@@ -250,7 +250,6 @@ def LDA_topic_modeller_by_quarter_multiprocessing(DF, LIST_OF_ADDITIONAL_STOP_WO
     for quarter in list_of_quarters:
         combination_of_brands += list(itertools.product([str(quarter)], ['positive', 'negative']))
 
-    #list_of_arguments = [(dict_of_clean_doc_by_quarter, str(quarter), None, number_of_topics_range) for quarter in list_of_quarters]
     list_of_arguments = [(dict_of_clean_doc_by_quarter, str(quarter_brand[0]), None, quarter_brand[1], number_of_topics_range) for quarter_brand in combination_of_brands]
 
     output_df = Manager().list()
@@ -264,7 +263,7 @@ def LDA_topic_modeller_by_quarter_multiprocessing(DF, LIST_OF_ADDITIONAL_STOP_WO
     
     output_df = pd.concat(review_df, ignore_index = True)
 
-    writer = pd.ExcelWriter('topic model results/LDA Topic Model by Quarter.xlsx')
+    writer = pd.ExcelWriter('Topic Model Results/LDA Topic Model by Quarter.xlsx')
     
     output_df.to_excel(writer,'Topic Model by Quarter')
     writer.save()
@@ -308,7 +307,7 @@ def LDA_topic_modeller_by_quarter_by_brand_multiprocessing(DF, LIST_OF_ADDITIONA
     
     output_df = pd.concat(review_df, ignore_index = True)    
     
-    writer = pd.ExcelWriter('topic model results/LDA Topic Model by Quarter by Brand.xlsx')
+    writer = pd.ExcelWriter('Topic Model Results/LDA Topic Model by Quarter by Brand.xlsx')
     output_df.to_excel(writer,'Topic Model by Quarter by Brand')
     writer.save()
     writer.close()

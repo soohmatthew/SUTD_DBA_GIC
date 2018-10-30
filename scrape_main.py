@@ -6,9 +6,9 @@ import pickle
 import pandas as pd
 
 #Python File Imports
-from scraper.amazon import amazon_scrape_to_df
-from scraper.walmart import walmart_scrape_to_df
-from scraper.bestbuy import bestbuy_scrape_to_df
+from Scrapers.amazon import amazon_scrape_to_df
+from Scrapers.walmart import walmart_scrape_to_df
+from Scrapers.bestbuy import bestbuy_scrape_to_df
 
 SEARCH_TERM = "coffee machine"
 
