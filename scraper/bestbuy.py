@@ -15,9 +15,11 @@ Created on Wed Oct  3 01:11:55 2018
 from urllib.request import urlopen as uReq
 import pickle
 import os
+import datetime
 
 #Third party imports
 import pandas as pd
+from dateutil.relativedelta import relativedelta
 from bs4 import BeautifulSoup as soup
 
 #Function that generates the url for the given product
@@ -97,10 +99,18 @@ def bestbuy_scrape_to_df(keyword):
                 #get review date
                 review_date = productcontainer.findAll("time", {"class":"submission-date"})
                 date = review_date[0].text
+                parsed_date = [date.split()[:2]]
+                time_dict = dict((fmt,int(amount)) for amount,fmt in parsed_date)
+                dt = relativedelta(**time_dict)
+                past_time = datetime.datetime.now() - dt
+                date = past_time.strftime("%B %d, %Y")
                 
                 #get ratings
                 reviewRating = productcontainer.findAll("p", {"class":"sr-only"})
                 rating = reviewRating[0].text
+                rating = rating.replace("Rating: ", "")
+                rating = rating.replace(" out of 5 stars", "")
+                rating = float(rating)
                 
                 #get review details
                 reviewDetailsRaw = productcontainer.findAll("p",{"class":"pre-white-space"})
@@ -123,28 +133,24 @@ def bestbuy_scrape_to_df(keyword):
         pickle.dump(reviews_df, handle, protocol=pickle.HIGHEST_PROTOCOL)
     return reviews_df       
 
-def bestbuy_scrape_to_df_multi(keyword):
+def bestbuy_scrape_to_df_multiprocessing(keyword):
     
     my_url_all = bestbuy_product_review_url(keyword)
     
-    from multiprocessing import Pool, cpu_count, Manager
+    from multiprocessing import Pool, cpu_count
 
     print("{} products found... ".format(str(len(my_url_all))))
-            
-    output_df = Manager().list()
 
     with Pool(processes= cpu_count() * 2) as pool:
         review_df = pool.map(bestbuy_scrape_one, my_url_all)
-        
-    output_df = output_df.append(review_df)
-    #final_output = pd.concat(output_df)
+    
+    final_output = pd.concat(review_df)
     pool.terminate()
     pool.join()
-    print(output_df)
     if not os.path.exists("pickle_files"):
         os.mkdir("pickle_files")
     with open('pickle_files/bestbuy_web_scrape.pickle', 'wb') as handle:
-        pickle.dump(output_df, handle, protocol=pickle.HIGHEST_PROTOCOL)
+        pickle.dump(final_output, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 def bestbuy_scrape_one(my_url):
     reviews_df = pd.DataFrame()
@@ -171,10 +177,18 @@ def bestbuy_scrape_one(my_url):
             #get review date
             review_date = productcontainer.findAll("time", {"class":"submission-date"})
             date = review_date[0].text
-            
+            parsed_date = [date.split()[:2]]
+            time_dict = dict((fmt,int(amount)) for amount,fmt in parsed_date)
+            dt = relativedelta(**time_dict)
+            past_time = datetime.datetime.now() - dt
+            date = past_time.strftime("%B %d, %Y")
+
             #get ratings
             reviewRating = productcontainer.findAll("p", {"class":"sr-only"})
             rating = reviewRating[0].text
+            rating = rating.replace("Rating: ", "")
+            rating = rating.replace(" out of 5 stars", "")
+            rating = float(rating)
             
             #get review details
             reviewDetailsRaw = productcontainer.findAll("p",{"class":"pre-white-space"})
@@ -190,9 +204,11 @@ def bestbuy_scrape_one(my_url):
             
             reviews_df = reviews_df.append(review_dict, ignore_index=True)
             
-    except:
-        reviews_df = pd.DataFrame()    
-    return reviews_df 
+    except Exception as e:
+        print(e)
+        reviews_df = pd.DataFrame()
+    print(reviews_df) 
+    return reviews_df
           
 if __name__ == "__main__":
-    bestbuy_scrape_to_df_multi("coffee machine")
+    bestbuy_scrape_to_df_multiprocessing("coffee machine")
