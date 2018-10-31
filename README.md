@@ -19,63 +19,105 @@
 The script is tested on Python 3.6.5 
 Install the following libraries on your system, in order for the code to run. 
 
-1. pandas==0.23.0
-2. requests==2.18.4
-3. nltk==3.3
-4. lxml==4.2.1
-5. gensim==3.6.0
-6. beautifulsoup4==4.6.3
-7. scikit_learn==0.20.0
+1. requests==2.20.0
+2. lxml==4.2.1
+3. spacy==2.0.16
+4. nltk==3.3
+5. fake_useragent==0.1.11
+6. textblob==0.15.1
+7. openpyxl==2.5.3
+8. gensim==3.6.0
+9. numpy==1.15.3
+10. pandas==0.23.0
+11. beautifulsoup4==4.6.3
+12. python_dateutil==2.7.5
+13. scikit_learn==0.20.0
 
 Alternatively, pip install the requirements.txt
+
 ```
 pip install -r requirements.txt
 ```
 
 ## Usage
 
-### 1.Data Collection
+### Configuration
+
+#### ```scrape_main.py```
+
+Configure the ```SEARCH TERM``` in ```scrape_main.py```, according to whatever product you wish to scrape reviews for.
+
+#### ```topic_model_main.py```
+
+Configure the ```SEARCH_TERM``` in ```topic_model_main.py``` accordingly. 
+Configure the ```PATH_TO_REVIEW_DOC``` in ```topic_model_main.py```, where the results of the webscraping is stored.
+
+<i>This is a temporary measure, as the final data pipeline has not been built yet.</i>
+
+Configure the ```LIST_OF_WORDS_TO_EXCLUDE```, to remove any words that may not be useful during the topic modelling process.
+Configure the ```LIST_OF_COMMON_WORDS```, which is an extension of ```LIST_OF_WORDS_TO_EXCLUDE```, just that it also includes the synonym of the words.
+Configure the ```NUMBER_OF_TOPICS_RANGE```, a range of number of topics in which the algorithm will search over, to generate the most suitable number of topic for the set of documents.
+
+#### Dealing with pickle files
+
+For this project, both webscraping and topic model generation take an extended period of time. In order to avoid any accidental loss of intermediate data, pickle files are used for caching purposes.
+
+If you can delete the pickle file once the python script has finished running, or you could add the following code at the end of the ``` if __name__ == "__main__" ``` statement in both ```scrape_main.py``` and ```topic_model_main.py```. 
+```
+currentdir = os.getcwd()
+shutil.rmtree(currentdir + '/pickle_files')
+```
+
+### 1. Data Collection
 
 The main script that triggers the Data Collection process is ```scrape_main.py```. 
 
 ```scrape_main.py``` takes in ```SEARCH TERM``` as a keyword, and will initialize the scrapping process from the following websites (more to be added):
 
-1. Amazon (All reviews from the first page of the website's search result)
-2. Best Buy (Number of reviews and number of search result pages scraped is up to the user to choose. Default is 40 reviews per product, and the first page of search query)
-3. Walmart (Gets the first 20 reviews for each search item, for the first page of the search query, number of pages can be changed.)
+1. Amazon
+2. Best Buy 
+3. Walmart 
 
 <i> *Each scraper is written by a different contributor, thus the functionality is slightly different for each. Furthermore, each scraper addresses the format of a specific website, and is sometimes limited to the restrictions of the website. </i>
 
 The default keyword for ```SEARCH_TERM``` is ```coffee machine```. 
-In order to change ```coffee machine``` to whatever you would like to scrape, access the ```scrape_main.py``` file and change the ```SEARCH_TERM```
-
-Scraping process will take ~1 hour, depending on how much there is to scrape.
+Scraping process will take ~1 hour, depending on how much there is to scrape. Multiprocessing is available for Amazon and Best Buy.
 
 #### Data Collection: Expected Output:
 
 An excel file labelled <i>'output corpus/Customer Reviews of ```SEARCH_TERM```.xlsx'</i> will be downloaded to your system.
 
-### 2.Topic Modelling
+### 2. Topic Modelling
 
-This script will take in the output of ```scrape_main.py```, namely ```'output corpus/Customer Reviews of SEARCH_TERM.xlsx'``` and generate topic models. 
-These topic models consists of a certain number of words that probably make up a topic. Currently, we form 2 topic models per algorithm, one consists of positive reviews (where Ratings = 5), while the other consists of negative reviews (where Ratings = 1).
+The main script that triggers the Topic Modelling process is ```topic_model_main.py```. 
 
-We use three different algorithms to produce the topic models:
+This script will take in the output of ```scrape_main.py```, namely ```'Review Corpus/Customer Reviews of SEARCH_TERM.xlsx'``` and generate topic models. The algorithm used to generate the topic model is the Latent Dirichlet Allocation (LDA) <i>Blei, David M.; Ng, Andrew Y.; Jordan, Michael I (January 2003)</i>.
 
-1. Latent Dirichlet Allocation (LDA) <i>Blei, David M.; Ng, Andrew Y.; Jordan, Michael I (January 2003)</i>
+Data was first preprocessed, to remove all stopwords, punctuations, and for words to all be lemmatized. Data is then split into different categories, by quarter, and then by brand. The algorithm will generate 2 sets of results, one with reviews categorised by quarter (in order to observe quarterly trends), and the oher one categorised by quarter, by brand (in order to observe quarterly trends, by brand).
 
-2. Latent Semantic Analysis (LSA)
+The ```scikit learn``` library was used to generate the LDA model, and the metric used for selecting the best model is lowest perplexity. The ```scikit learn``` library was picked over the ```gensim``` library, due to the ability for the ```scikit learn``` library to apply GridSearch to find the best topic model.
 
-3. k-means Clustering
+Other algorithms tested were as follows, but did not yield as good results. They can be viewed under ```topic_modelling/Past Testings```.
 
-Topic modelling process will take ~15 min, depending on how much data there is to process.
+1. Latent Semantic Analysis (LSA)
+
+2. k-means Clustering
+
+Topic modelling is implemented with multiprocessing, and should take no more than 1 hour.
 
 #### Topic Modelling: Expected Output
 
-3 different excel files, labelled <i>'K Means Topic Model.xlsx'</i>, <i>'LDA Topic Model.xlsx'</i>, <i>'LSA Topic Model.xlsx'</i>, will be downloaded to your system. Each excel file contains a number of words generated by the algorithm that most likely form a topic, sorted by brand.
+2 Excel Files, ```Topic Model Results/LDA Topic Model by Quarter by Brand.xlsx``` and ```Topic Model Results/LDA Topic Model by Quarter.xlsx```.
+
+
+### 3. Sentiment Analysis 
+
+Currently, we are still working on building Sentiment Analysis Models, testing out various models to determine which has the greatest accuracy. We will be using the Valence Aware Dictionary and sEntiment Reasoner (VADER) library as an accuracy benchmark.
 
 ## Future Works
 
-1. As of now, the topic model does not produce meaningful results everytime. Our next task is to fine tune the parameters, such as the number of topics expected, to determine what number of topics produce the most coherent model.
+1. We will be trying out sentence entailment, exploring various implementations (fasttext, word2vec).
 
-2. Additionally, we will include the time factor into our corpus, in order to see how the topics change over time. Currently, our corpus is not split by time.
+2. We will be cleaning up the webscraping to include (hopefully) 2 more websites.
+
+3. Visualisation

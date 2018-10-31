@@ -10,8 +10,10 @@ from Scrapers.amazon import amazon_scrape_to_df
 from Scrapers.walmart import walmart_scrape_to_df
 from Scrapers.bestbuy import bestbuy_scrape_to_df
 
+# CONFIG
 SEARCH_TERM = "coffee machine"
 
+# Triggers the amazon, bestbuy and walmart webscrapers
 def main(SEARCH_TERM):
     if not os.path.exists("pickle_files"):
         os.mkdir("pickle_files")
@@ -29,6 +31,8 @@ def main(SEARCH_TERM):
     writer.close()
     return
 
+# In the event that pickle files were generated from the individual webscrapers, 
+# and you just want to combine the various pickle files to 1 document.
 def using_cached_data(SEARCH_TERM):
     with open(r'pickle_files\amazon_web_scrape.pickle', 'rb') as handle_1:
         amazon_df = pickle.load(handle_1)
@@ -46,4 +50,4 @@ def using_cached_data(SEARCH_TERM):
     return
 
 if __name__ == '__main__':
-    using_cached_data(SEARCH_TERM)
+    main(SEARCH_TERM)

@@ -68,7 +68,10 @@ def Preprocessing(df, LIST_OF_ADDITIONAL_STOP_WORDS, LIST_OF_COMMON_WORDS):
     
     df_positive = df[(df['Rating'] == 5) | (df['Rating'] == 4)]
     df_negative = df[(df['Rating'] == 1) | (df['Rating'] == 2)]
-    
+
+    if not os.path.exists("pickle_files"):
+        os.mkdir("pickle_files")
+
     for type_of_review in ['positive', 'negative']:
         if type_of_review == 'positive':
             df = df_positive
