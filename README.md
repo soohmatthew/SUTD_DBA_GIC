@@ -19,6 +19,7 @@
 The script is tested on Python 3.6.5 
 Install the following libraries on your system, in order for the code to run. 
 
+```
 1. requests==2.20.0
 2. lxml==4.2.1
 3. spacy==2.0.16
@@ -32,6 +33,7 @@ Install the following libraries on your system, in order for the code to run.
 11. beautifulsoup4==4.6.3
 12. python_dateutil==2.7.5
 13. scikit_learn==0.20.0
+```
 
 Alternatively, pip install the requirements.txt
 
