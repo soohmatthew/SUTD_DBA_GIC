@@ -40,7 +40,11 @@ Alternatively, pip install the requirements.txt
 ```
 pip install -r requirements.txt
 ```
+Additionally, download SpaCy's English model by running the following code in your terminal:
 
+```
+python -m spacy download en
+```
 ## Usage
 
 ### Configuration
