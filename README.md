@@ -13,6 +13,7 @@
 
 1. Data Collection: Web-scraping of popular e-commerce websites, to build a corpus of product reviews. 
 2. Topic Modelling: Building a topic model, using various topic modelling algorithms, trained with the corpus we have built.
+3. Contextual Similarity: Comparing a given hypothesis with the corpus of product reviews, to validate which reviews yield the greatest similarity with the hypothesis. Reviews can then be sorted by brand.
 
 ## Prerequisites
 
