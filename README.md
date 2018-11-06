@@ -13,6 +13,7 @@
 
 1. Data Collection: Web-scraping of popular e-commerce websites, to build a corpus of product reviews. 
 2. Topic Modelling: Building a topic model, using various topic modelling algorithms, trained with the corpus we have built.
+3. Contextual Similarity: Comparing a given hypothesis with the corpus of product reviews, to validate which reviews yield the greatest similarity with the hypothesis. Reviews can then be sorted by brand.
 
 ## Prerequisites
 
@@ -56,15 +57,21 @@ python -m spacy download en
 ### Configuration of ```main.py```
 
 <i> For the webscraper </i>
+
 1. `SEARCH_TERM`, according to whatever product you wish to scrape reviews for. Default is `coffee machines`
 
 <i> For the topic model </i>
+
 2. `PATH_TO_REVIEW_DOC`, where the results of the webscraping is stored. Advised not to change location.
-3. `LIST_OF_WORDS_TO_EXCLUDE`, to remove any words that may not be useful during the topic modelling process. Default is `['one', 'two', 'three', 'four', 'five', 'star']`, 
-4. `LIST_OF_COMMON_WORDS`, which is an extension of ```LIST_OF_WORDS_TO_EXCLUDE```, just that it also includes the synonym of the words. Default is `["good", "great", "love"]`, 
+
+3. `LIST_OF_WORDS_TO_EXCLUDE`, to remove any words that may not be useful during the topic modelling process. Default is `['one', 'two', 'three', 'four', 'five', 'star']`.
+
+4. `LIST_OF_COMMON_WORDS`, which is an extension of ```LIST_OF_WORDS_TO_EXCLUDE```, just that it also includes the synonym of the words. Default is `["good", "great", "love"]`.
+
 5. `NUMBER_OF_TOPICS_RANGE`, a range of number of topics in which the algorithm will search over, to generate the most suitable number of topic for the set of documents. Default is `[2,3,4,5]`
 
 <i> For the contextual similarity model </i>
+
 6. `HYPOTHESIS_STATEMENT`, based on what your hypothesis statement is. Default is `breakdown`.
 
 ```main.py``` can be run through your terminal, once relevant packages and documents have been downloaded and installed, and configured to the appropriate settings.
@@ -107,7 +114,7 @@ Scraping process will take ~1 hour, depending on how much there is to scrape. Mu
 
 #### Data Collection: Expected Output:
 
-An excel file labelled <i>'output corpus/Customer Reviews of ```SEARCH_TERM```.xlsx'</i> will be downloaded to your system.
+An excel file labelled ```'output corpus/Customer Reviews of SEARCH_TERM.xlsx'``` will be downloaded to your system.
 
 ### 2. Topic Modelling
 
@@ -119,7 +126,7 @@ Data was first preprocessed, to remove all stopwords, punctuations, and for word
 
 The ```scikit learn``` library was used to generate the LDA model, and the metric used for selecting the best model is lowest perplexity. The ```scikit learn``` library was picked over the ```gensim``` library, due to the ability for the ```scikit learn``` library to apply GridSearch to find the best topic model.
 
-Other algorithms tested were as follows, but did not yield as good results. They can be viewed under ```topic_modelling/Past Testings```.
+Other algorithms tested were as follows, but did not yield as good results. They can be viewed under ```topic_modelling/Past Testings (Deprecated, for recording purposes)```.
 
 1. Latent Semantic Analysis (LSA)
 
