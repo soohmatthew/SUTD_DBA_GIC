@@ -113,7 +113,7 @@ Scraping process will take ~1 hour, depending on how much there is to scrape. Mu
 
 #### Data Collection: Expected Output:
 
-An excel file labelled <i>'output corpus/Customer Reviews of ```SEARCH_TERM```.xlsx'</i> will be downloaded to your system.
+An excel file labelled ```'output corpus/Customer Reviews of SEARCH_TERM.xlsx'``` will be downloaded to your system.
 
 ### 2. Topic Modelling
 
