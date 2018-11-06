@@ -16,23 +16,25 @@
 
 ## Prerequisites
 
-The script is tested on Python 3.6.5 
-Install the following libraries on your system, in order for the code to run. 
+1. The script is tested on Python 3.6.5 
+2. Install the following libraries on your system, in order for the code to run. 
 
 ```
-1. requests==2.20.0
-2. lxml==4.2.1
-3. spacy==2.0.16
-4. nltk==3.3
-5. fake_useragent==0.1.11
-6. textblob==0.15.1
-7. openpyxl==2.5.3
-8. gensim==3.6.0
-9. numpy==1.15.3
-10. pandas==0.23.0
-11. beautifulsoup4==4.6.3
-12. python_dateutil==2.7.5
-13. scikit_learn==0.20.0
+numpy==1.15.3
+textblob==0.15.1
+fake_useragent==0.1.11
+swifter==0.260
+pandas==0.23.0
+lxml==4.2.1
+nltk==3.3
+spacy==2.0.16
+scipy==1.1.0
+gensim==3.6.0
+requests==2.20.0
+openpyxl==2.5.3
+beautifulsoup4==4.6.3
+python_dateutil==2.7.5
+scikit_learn==0.20.0
 ```
 
 Alternatively, pip install the requirements.txt
@@ -41,11 +43,14 @@ Alternatively, pip install the requirements.txt
 pip install -r requirements.txt
 ```
 
-Additionally, download SpaCy's English model by running the following code in your terminal:
+3. Download SpaCy's English model by running the following code in your terminal:
 
 ```
 python -m spacy download en
 ```
+
+4. Please download the pre-trained english FastText Word Vector (bin + text) at https://github.com/facebookresearch/fastText/blob/master/pretrained-vectors.md , save it under the Finding_Context_Similarity folder, in the format '.../Finding_Context_Similarity/wiki.en'
+
 ## Usage
 
 ### Configuration
@@ -123,15 +128,11 @@ Currently, we are still working on building Sentiment Analysis Models, testing o
 
 ### 4. Textual Entailment
 
+#### Use of Pre-trained word embeddings 
+P. Bojanowski*, E. Grave*, A. Joulin, T. Mikolov, Enriching Word Vectors with Subword Information
 
 
 ## Future Works
 
-1. We will be trying out sentence entailment, exploring various implementations (fasttext, word2vec).
+1. Visualisation
 
-2. We will be cleaning up the webscraping to include (hopefully) 2 more websites.
-
-3. Visualisation
-
-#### Use of Pre-trained word embeddings 
-P. Bojanowski*, E. Grave*, A. Joulin, T. Mikolov, Enriching Word Vectors with Subword Information
