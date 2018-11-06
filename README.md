@@ -53,32 +53,42 @@ python -m spacy download en
 
 ## Usage
 
-### Configuration
+### Configuration of ```main.py```
 
-#### ```scrape_main.py```
+<i> For the webscraper </i>
+1. `SEARCH_TERM`, according to whatever product you wish to scrape reviews for. Default is `coffee machines`
 
-Configure the ```SEARCH TERM``` in ```scrape_main.py```, according to whatever product you wish to scrape reviews for.
+<i> For the topic model </i>
+2. `PATH_TO_REVIEW_DOC`, where the results of the webscraping is stored. Advised not to change location.
+3. `LIST_OF_WORDS_TO_EXCLUDE`, to remove any words that may not be useful during the topic modelling process. Default is `['one', 'two', 'three', 'four', 'five', 'star']`, 
+4. `LIST_OF_COMMON_WORDS`, which is an extension of ```LIST_OF_WORDS_TO_EXCLUDE```, just that it also includes the synonym of the words. Default is `["good", "great", "love"]`, 
+5. `NUMBER_OF_TOPICS_RANGE`, a range of number of topics in which the algorithm will search over, to generate the most suitable number of topic for the set of documents. Default is `[2,3,4,5]`
 
-#### ```topic_model_main.py```
+<i> For the contextual similarity model </i>
+6. `HYPOTHESIS_STATEMENT`, based on what your hypothesis statement is. Default is `breakdown`.
 
-Configure the ```SEARCH_TERM``` in ```topic_model_main.py``` accordingly. 
-Configure the ```PATH_TO_REVIEW_DOC``` in ```topic_model_main.py```, where the results of the webscraping is stored.
+```main.py``` can be run through your terminal, once relevant packages and documents have been downloaded and installed, and configured to the appropriate settings.
 
-<i>This is a temporary measure, as the final data pipeline has not been built yet.</i>
+### Configuration of Individual Scripts
 
-Configure the ```LIST_OF_WORDS_TO_EXCLUDE```, to remove any words that may not be useful during the topic modelling process.
-Configure the ```LIST_OF_COMMON_WORDS```, which is an extension of ```LIST_OF_WORDS_TO_EXCLUDE```, just that it also includes the synonym of the words.
-Configure the ```NUMBER_OF_TOPICS_RANGE```, a range of number of topics in which the algorithm will search over, to generate the most suitable number of topic for the set of documents.
+Running of individual portions can be done via the following scripts, scripts need to be configured as well, with the same settings as above.
+Webscraping:  ```scrape_main.py```
+Topic Modelling: ```topic_model_main.py```
+Contextual Similarity: ```find_contextual_similarity_main.py```
 
 #### Dealing with pickle files
 
 For this project, both webscraping and topic model generation take an extended period of time. In order to avoid any accidental loss of intermediate data, pickle files are used for caching purposes.
 
-If you can delete the pickle file once the python script has finished running, or you could add the following code at the end of the ``` if __name__ == "__main__" ``` statement in both ```scrape_main.py``` and ```topic_model_main.py```. 
+If you can delete the pickle file once the python script has finished running, or you could add the following code at the end of the ``` if __name__ == "__main__" ``` statement in ```main.py```. 
+
 ```
 currentdir = os.getcwd()
 shutil.rmtree(currentdir + '/pickle_files')
 ```
+
+
+## Methodology
 
 ### 1. Data Collection
 
@@ -126,11 +136,20 @@ Topic modelling is implemented with multiprocessing, and should take no more tha
 
 Currently, we are still working on building Sentiment Analysis Models, testing out various models to determine which has the greatest accuracy. We will be using the Valence Aware Dictionary and sEntiment Reasoner (VADER) library as an accuracy benchmark.
 
-### 4. Textual Entailment
+### 4. Contextual Similarity
 
-#### Use of Pre-trained word embeddings 
-P. Bojanowski*, E. Grave*, A. Joulin, T. Mikolov, Enriching Word Vectors with Subword Information
+The main script that triggers the Contextual Similarity process is ```find_contextual_similarity_main.py```. Essentially, the algorithm takes in a hypothesis as an input, and compares the hypothesis with the user reviews, and returns similarity score of the hypothesis and the user review. Scores are then aggregated and grouped based on the Quarter and the Brand. Pre-trained word embeddings trained on Wikipedia using fastText were employed, to convert words with similar meaning to have similar representation. fastText was used instead of Word2Vec so that the rare words could be represented as well.
 
+Once words were decomposed into their vector representation, user reviews sentences were represented by taking the vector sum of all the word vectors composing the sentence, divided by the number of words. The hypothesis is also converted into a vector representation. We then take the cosine similarity of the vectorised user review sentences and the vectorised hypothesis statement.
+
+Contextual Similarity is implemented with multiprocessing in certain steps, thus results can be generated in ~10 minutes.
+
+#### Use of Pre-trained word embeddings
+P. Bojanowski*, E. Grave*, A. Joulin, T. Mikolov, [<i>Enriching Word Vectors with Subword Information</i>](https://arxiv.org/abs/1607.04606)
+
+#### Contextual Similarity: Expected Output
+
+1 Excel File, ```Finding_Context_Similarity\Similarity Table Results\Similarity Table - 'HYPOTHESIS STATEMENT'.xlsx```
 
 ## Future Works
 
