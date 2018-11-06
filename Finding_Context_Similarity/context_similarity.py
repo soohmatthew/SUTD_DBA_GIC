@@ -121,7 +121,7 @@ def construct_similarity_table(HYPOTHESIS_STATEMENT):
         vectorised_reviews_df_final = vectorised_reviews_df_sorted.groupby(['Y-Quarter', 'Brand'])
 
         frames = []
-        cols_to_include = ['Brand', 'Name', 'Rating', 'Source', 'User Comment', 'Similarity to Hypothesis' ,'Average Similarity']
+        cols_to_include = ['Y-Quarter', 'Brand', 'Name', 'Rating', 'Source', 'User Comment', 'Similarity to Hypothesis' ,'Average Similarity']
         for key in vectorised_reviews_df_final.groups.keys():
             df_sorted_by_brand = vectorised_reviews_df_sorted[(vectorised_reviews_df_sorted['Y-Quarter'] == key[0]) & (vectorised_reviews_df_sorted['Brand'] == key[1])]
             df_sorted_by_brand['Average Similarity'] = df_sorted_by_brand['Similarity to Hypothesis'].mean()
