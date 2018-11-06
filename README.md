@@ -40,6 +40,7 @@ Alternatively, pip install the requirements.txt
 ```
 pip install -r requirements.txt
 ```
+
 Additionally, download SpaCy's English model by running the following code in your terminal:
 
 ```
@@ -120,6 +121,10 @@ Topic modelling is implemented with multiprocessing, and should take no more tha
 
 Currently, we are still working on building Sentiment Analysis Models, testing out various models to determine which has the greatest accuracy. We will be using the Valence Aware Dictionary and sEntiment Reasoner (VADER) library as an accuracy benchmark.
 
+### 4. Textual Entailment
+
+
+
 ## Future Works
 
 1. We will be trying out sentence entailment, exploring various implementations (fasttext, word2vec).
@@ -127,3 +132,6 @@ Currently, we are still working on building Sentiment Analysis Models, testing o
 2. We will be cleaning up the webscraping to include (hopefully) 2 more websites.
 
 3. Visualisation
+
+#### Use of Pre-trained word embeddings 
+P. Bojanowski*, E. Grave*, A. Joulin, T. Mikolov, Enriching Word Vectors with Subword Information

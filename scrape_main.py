@@ -6,9 +6,9 @@ import pickle
 import pandas as pd
 
 #Python File Imports
-from Scrapers.amazon import amazon_scrape_to_df
-from Scrapers.walmart import walmart_scrape_to_df
-from Scrapers.bestbuy import bestbuy_scrape_to_df
+from Webscraping.Scrapers.amazon import amazon_scrape_to_df
+from Webscraping.Scrapers.walmart import walmart_scrape_to_df
+from Webscraping.Scrapers.bestbuy import bestbuy_scrape_to_df
 
 # CONFIG
 SEARCH_TERM = "coffee machine"
@@ -25,7 +25,7 @@ def main(SEARCH_TERM):
     frames = [amazon_df, walmart_df, bestbuy_df]
     result = pd.concat(frames)
 
-    writer = pd.ExcelWriter('Customer Reviews of {}.xlsx'.format(SEARCH_TERM))
+    writer = pd.ExcelWriter('Webscraping/Review Corpus/Customer Reviews of {}.xlsx'.format(SEARCH_TERM))
     result.to_excel(writer,'{}'.format(SEARCH_TERM))
     writer.save()
     writer.close()
@@ -43,7 +43,7 @@ def using_cached_data(SEARCH_TERM):
 
     frames = [amazon_df, walmart_df, bestbuy_df]
     result = pd.concat(frames)
-    writer = pd.ExcelWriter('Review Corpus/Customer Reviews of {}.xlsx'.format(SEARCH_TERM))
+    writer = pd.ExcelWriter('Webscraping/Review Corpus/Customer Reviews of {}.xlsx'.format(SEARCH_TERM))
     result.to_excel(writer,'{}'.format(SEARCH_TERM))
     writer.save()
     writer.close()

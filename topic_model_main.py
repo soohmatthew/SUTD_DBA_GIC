@@ -5,12 +5,12 @@ import os
 import pandas as pd
 
 #Python File Imports
-from topic_modelling.LDA_GridSearch import LDA_topic_modeller_by_quarter_by_brand_multiprocessing, LDA_topic_modeller_by_quarter_multiprocessing
+from Topic_Modelling.topic_modelling.LDA_GridSearch import LDA_topic_modeller_by_quarter_by_brand_multiprocessing, LDA_topic_modeller_by_quarter_multiprocessing
 
 #Define the parameters of the model
 
 SEARCH_TERM = "coffee machine"
-PATH_TO_REVIEW_DOC = "Review Corpus/Customer Reviews of coffee machine.xlsx"
+PATH_TO_REVIEW_DOC = "Webscraping/Review Corpus/Customer Reviews of coffee machine.xlsx"
 LIST_OF_WORDS_TO_EXCLUDE = ['one', 'two', 'three', 'four', 'five', 'star']
 LIST_OF_COMMON_WORDS = ["good", "great", "love"]
 NUMBER_OF_TOPICS_RANGE = [2,3,4,5]
