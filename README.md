@@ -125,7 +125,7 @@ Data was first preprocessed, to remove all stopwords, punctuations, and for word
 
 The ```scikit learn``` library was used to generate the LDA model, and the metric used for selecting the best model is lowest perplexity. The ```scikit learn``` library was picked over the ```gensim``` library, due to the ability for the ```scikit learn``` library to apply GridSearch to find the best topic model.
 
-Other algorithms tested were as follows, but did not yield as good results. They can be viewed under ```topic_modelling/Past Testings```.
+Other algorithms tested were as follows, but did not yield as good results. They can be viewed under ```topic_modelling/Past Testings (Deprecated, for recording purposes)```.
 
 1. Latent Semantic Analysis (LSA)
 
