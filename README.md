@@ -56,15 +56,21 @@ python -m spacy download en
 ### Configuration of ```main.py```
 
 <i> For the webscraper </i>
+
 1. `SEARCH_TERM`, according to whatever product you wish to scrape reviews for. Default is `coffee machines`
 
 <i> For the topic model </i>
+
 2. `PATH_TO_REVIEW_DOC`, where the results of the webscraping is stored. Advised not to change location.
-3. `LIST_OF_WORDS_TO_EXCLUDE`, to remove any words that may not be useful during the topic modelling process. Default is `['one', 'two', 'three', 'four', 'five', 'star']`, 
-4. `LIST_OF_COMMON_WORDS`, which is an extension of ```LIST_OF_WORDS_TO_EXCLUDE```, just that it also includes the synonym of the words. Default is `["good", "great", "love"]`, 
+
+3. `LIST_OF_WORDS_TO_EXCLUDE`, to remove any words that may not be useful during the topic modelling process. Default is `['one', 'two', 'three', 'four', 'five', 'star']`.
+
+4. `LIST_OF_COMMON_WORDS`, which is an extension of ```LIST_OF_WORDS_TO_EXCLUDE```, just that it also includes the synonym of the words. Default is `["good", "great", "love"]`.
+
 5. `NUMBER_OF_TOPICS_RANGE`, a range of number of topics in which the algorithm will search over, to generate the most suitable number of topic for the set of documents. Default is `[2,3,4,5]`
 
 <i> For the contextual similarity model </i>
+
 6. `HYPOTHESIS_STATEMENT`, based on what your hypothesis statement is. Default is `breakdown`.
 
 ```main.py``` can be run through your terminal, once relevant packages and documents have been downloaded and installed, and configured to the appropriate settings.
