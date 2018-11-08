@@ -13,6 +13,15 @@ from gensim.models.fasttext import FastText
 import swifter
 from scipy import spatial
 import openpyxl
+from sklearn.feature_extraction.text import TfidfVectorizer
+
+# Preprocessing of Text for TF-IDF
+def clean_up_corpus(text):
+    # 1. Convert to lower case
+    text = text.lower()
+    # 2. Remove non alphabetic characters
+    words = ''.join([i for i in text if not i.isdigit()])
+    return words
 
 # Preprocessing of Text
 def clean_up_review(text):
@@ -31,20 +40,26 @@ def clean_up_review(text):
     return words
 
 # Function to average all words vectors in a given sentence
-def avg_sentence_vector(words, en_model):
+def avg_sentence_vector(words, en_model, dict_of_words):
     model = en_model
     featureVec = np.zeros((300,), dtype="float32")
-    nwords = 0
+    dict_of_frequencies = {}
+
+    for word in words:
+        if word in dict_of_words and word in en_model:
+            dict_of_frequencies[word] = dict_of_words[word]
+
+    #Normalise dict_of_frequencies
+    total_freq = sum([dict_of_frequencies[word] for word in dict_of_frequencies])
+    for word in dict_of_frequencies:
+        dict_of_frequencies[word] /= total_freq
 
     for word in words:
         try:
-            nwords = nwords+1
-            featureVec = np.add(featureVec, model.wv[word])
+            weight_word_vec = en_model.wv[word]/dict_of_frequencies[word]
+            featureVec = np.add(featureVec, weight_word_vec)
         except KeyError:
             continue
-
-    if nwords>0:
-        featureVec = np.divide(featureVec, nwords)
     return featureVec
 
 # Returns the vectorised version of the user reviews, as well as the hypothesis statement
@@ -85,9 +100,16 @@ def vectorise_user_comments(PROCESSED_HYPOTHESIS_STATEMENT, REPROCESS = False):
         else:
             print("Please download the pre-trained english FastText Word Vector (bin + text) at https://github.com/facebookresearch/fastText/blob/master/pretrained-vectors.md , save it under the Finding_Context_Similarity folder, in the format '.../Finding_Context_Similarity/wiki.en'")
             return None, None
-
-    df['User Comment Vectorised'] = df['User Comment Cleaned'].swifter.apply(avg_sentence_vector, en_model = en_model)
-    vectorised_hypothesis_statement = avg_sentence_vector(PROCESSED_HYPOTHESIS_STATEMENT , en_model) 
+        
+    # Generate TF-IDF matrix
+    corpus = df['User Comment'].tolist()
+    vectorizer = TfidfVectorizer(min_df=1, max_df=.5, stop_words = 'english', preprocessor = clean_up_corpus)
+    X = vectorizer.fit_transform(corpus)
+    idf = vectorizer.idf_
+    dict_of_words = dict(zip(vectorizer.get_feature_names(), idf))
+    
+    df['User Comment Vectorised'] = df['User Comment Cleaned'].swifter.apply(avg_sentence_vector, en_model = en_model, dict_of_words= dict_of_words)
+    vectorised_hypothesis_statement = avg_sentence_vector(PROCESSED_HYPOTHESIS_STATEMENT , en_model = en_model, dict_of_words = dict_of_words) 
     return df, vectorised_hypothesis_statement
 
 # Computes cosine similarity of the vectorised user review, and vectorised hypothesis, returns a score

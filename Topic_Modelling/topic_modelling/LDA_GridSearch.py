@@ -19,6 +19,10 @@ import spacy
 import gensim
 import openpyxl
 
+# Corpus Download necessary to run text processing
+import nltk
+nltk.download('wordnet')
+
 class LDAUsingPerplexityScorer(LatentDirichletAllocation):
     def score(self, X, y=None):
         score = super().perplexity(X, sub_sampling=False)
@@ -88,6 +92,10 @@ def Preprocessing(df, LIST_OF_ADDITIONAL_STOP_WORDS, LIST_OF_COMMON_WORDS):
             #Tokenise words
             doc_of_quarter_token = list(sent_to_words(doc_of_quarter))
 
+            bigram = gensim.models.phrases.Phrases(doc_of_quarter_token, min_count=3, threshold=10)
+            
+            doc_of_quarter_token = [bigram[line] for line in doc_of_quarter_token]
+
             #Lemmatize words
             doc_of_quarter_lemma = lemmatization(doc_of_quarter_token, allowed_postags=['NOUN', 'ADJ', 'VERB', 'ADV'])
 
@@ -106,6 +114,10 @@ def Preprocessing(df, LIST_OF_ADDITIONAL_STOP_WORDS, LIST_OF_COMMON_WORDS):
                     continue
                 else:
                     doc_of_quarter_by_brand_token = list(sent_to_words(doc_of_quarter_by_brand))
+
+                    bigram_brand = gensim.models.phrases.Phrases(doc_of_quarter_by_brand_token, min_count=3, threshold=10)
+            
+                    doc_of_quarter_by_brand_token = [bigram_brand[line] for line in doc_of_quarter_by_brand_token]
 
                     #Lemmatize words
                     doc_of_quarter_by_brand_lemma = lemmatization(doc_of_quarter_by_brand_token, allowed_postags=['NOUN', 'ADJ', 'VERB', 'ADV'])
