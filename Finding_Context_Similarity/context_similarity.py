@@ -41,7 +41,6 @@ def clean_up_review(text):
 
 # Function to average all words vectors in a given sentence
 def avg_sentence_vector(words, en_model, dict_of_words):
-    model = en_model
     featureVec = np.zeros((300,), dtype="float32")
     dict_of_frequencies = {}
 
@@ -104,7 +103,7 @@ def vectorise_user_comments(PROCESSED_HYPOTHESIS_STATEMENT, REPROCESS = False):
     # Generate TF-IDF matrix
     corpus = df['User Comment'].tolist()
     vectorizer = TfidfVectorizer(min_df=1, max_df=.5, stop_words = 'english', preprocessor = clean_up_corpus)
-    X = vectorizer.fit_transform(corpus)
+    vectorizer.fit_transform(corpus)
     idf = vectorizer.idf_
     dict_of_words = dict(zip(vectorizer.get_feature_names(), idf))
     
