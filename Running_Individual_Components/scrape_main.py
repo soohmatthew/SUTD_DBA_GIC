@@ -1,11 +1,13 @@
 #Standard library imports
 import os
 import pickle
+import sys
 
 #Third party library imports
 import pandas as pd
 
 #Python File Imports
+sys.path.append(os.getcwd())
 from Webscraping.Scrapers.amazon import amazon_scrape_to_df
 from Webscraping.Scrapers.walmart import walmart_scrape_to_df
 from Webscraping.Scrapers.bestbuy import bestbuy_scrape_to_df
