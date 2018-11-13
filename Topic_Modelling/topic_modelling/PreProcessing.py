@@ -13,6 +13,8 @@ import numpy as np
 import spacy
 import gensim
 import openpyxl
+import nltk
+nltk.download('wordnet')
 
 def lemmatization(texts, allowed_postags=['NOUN', 'ADJ', 'VERB', 'ADV']):
     nlp = spacy.load('en', disable=['parser', 'ner'])
