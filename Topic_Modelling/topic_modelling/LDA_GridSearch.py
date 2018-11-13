@@ -4,6 +4,7 @@ import pickle
 from collections import OrderedDict
 import os
 import itertools
+import sys
 
 #Third party imports
 import pandas as pd
@@ -19,6 +20,10 @@ import spacy
 import gensim
 import openpyxl
 
+#Python File Imports
+sys.path.append(os.getcwd())
+from Topic_Modelling.topic_modelling.PreProcessing import Preprocessing
+
 # Corpus Download necessary to run text processing
 import nltk
 nltk.download('wordnet')
@@ -29,116 +34,6 @@ class LDAUsingPerplexityScorer(LatentDirichletAllocation):
         # Perplexity is lower for better, negative scoring to simulate that.
         return -1*score
 
-def lemmatization(texts, allowed_postags=['NOUN', 'ADJ', 'VERB', 'ADV']):
-    nlp = spacy.load('en', disable=['parser', 'ner'])
-    texts_out = []
-    for sent in texts:
-        doc = nlp(" ".join(sent)) 
-        texts_out.append(" ".join([token.lemma_ if token.lemma_ not in ['-PRON-'] else '' for token in doc if token.pos_ in allowed_postags]))
-    return texts_out
-
-def sent_to_words(sentences):
-    for sentence in sentences:
-        yield(gensim.utils.simple_preprocess(str(sentence), deacc=True))  # deacc=True removes punctuations
-
-def construct_stopwords(DF, LIST_OF_ADDITIONAL_STOP_WORDS, LIST_OF_COMMON_WORDS):
-    list_of_brands = DF["Brand"].unique()
-
-    # If the word is in the list of common words, word and its synonyms will be added to list of stop words to be removed. 
-    for word in LIST_OF_COMMON_WORDS:
-        for syn in wordnet.synsets(word): 
-            for l in syn.lemmas(): 
-                LIST_OF_ADDITIONAL_STOP_WORDS.append(l.name())
-
-    #Remove brand name
-    list_of_brands = [brand.lower() for brand in list_of_brands]
-    LIST_OF_ADDITIONAL_STOP_WORDS = LIST_OF_ADDITIONAL_STOP_WORDS + list_of_brands
-
-    list_of_stop_words = set(stopwords.words('english'))
-    for additional_word in LIST_OF_ADDITIONAL_STOP_WORDS:
-        list_of_stop_words.add(additional_word)
-    return list_of_stop_words
-
-def Preprocessing(df, LIST_OF_ADDITIONAL_STOP_WORDS, LIST_OF_COMMON_WORDS):
-
-    stop_words = construct_stopwords(df, LIST_OF_ADDITIONAL_STOP_WORDS, LIST_OF_COMMON_WORDS)
-    processed_data_by_quarter = OrderedDict()
-    processed_data_by_quarter_by_brand = OrderedDict()
-
-    df['Date'] = pd.to_datetime(df['Date'],infer_datetime_format=True)
-    df['Y-Quarter'] = df['Date'].dt.to_period("Q")
-    list_of_quarters = df['Y-Quarter'].unique()
-    list_of_brands = df["Brand"].unique()
-    
-    df_positive = df[(df['Rating'] == 5) | (df['Rating'] == 4)]
-    df_negative = df[(df['Rating'] == 1) | (df['Rating'] == 2)]
-
-    if not os.path.exists("pickle_files"):
-        os.mkdir("pickle_files")
-
-    for type_of_review in ['positive', 'negative']:
-        if type_of_review == 'positive':
-            df = df_positive
-        elif type_of_review == 'negative':
-            df = df_negative
-        processed_data_by_quarter[type_of_review] = OrderedDict()
-        processed_data_by_quarter_by_brand[type_of_review] = OrderedDict()
-    
-        for quarter in list_of_quarters:
-            print("Processing {}...".format(quarter))
-            
-            doc_of_quarter = df[(df['Y-Quarter'] == quarter)]["User Comment"].tolist()
-
-            #Tokenise words
-            doc_of_quarter_token = list(sent_to_words(doc_of_quarter))
-
-            bigram = gensim.models.phrases.Phrases(doc_of_quarter_token, min_count=3, threshold=10)
-            
-            doc_of_quarter_token = [bigram[line] for line in doc_of_quarter_token]
-
-            #Lemmatize words
-            doc_of_quarter_lemma = lemmatization(doc_of_quarter_token, allowed_postags=['NOUN', 'ADJ', 'VERB', 'ADV'])
-
-            #Remove stopwords, digits.
-            doc_of_quarter_stop = []
-            for sentence in doc_of_quarter_lemma:
-                sentence = ' '.join(word for word in sentence.split() if word not in stop_words and not word.isdigit())
-                doc_of_quarter_stop.append(sentence)
-
-            processed_data_by_quarter[type_of_review][str(quarter)] = doc_of_quarter_stop
-            processed_data_by_quarter_by_brand[type_of_review][str(quarter)] = OrderedDict()
-
-            for brand in list_of_brands:
-                doc_of_quarter_by_brand = df[(df['Y-Quarter'] == quarter) & (df['Brand'] == brand)]["User Comment"].tolist()
-                if doc_of_quarter_by_brand == []:
-                    continue
-                else:
-                    doc_of_quarter_by_brand_token = list(sent_to_words(doc_of_quarter_by_brand))
-
-                    bigram_brand = gensim.models.phrases.Phrases(doc_of_quarter_by_brand_token, min_count=3, threshold=10)
-            
-                    doc_of_quarter_by_brand_token = [bigram_brand[line] for line in doc_of_quarter_by_brand_token]
-
-                    #Lemmatize words
-                    doc_of_quarter_by_brand_lemma = lemmatization(doc_of_quarter_by_brand_token, allowed_postags=['NOUN', 'ADJ', 'VERB', 'ADV'])
-
-                    #Remove stopwords, digits.
-                    doc_of_quarter_by_brand_stop = []
-                    for sentence in doc_of_quarter_by_brand_lemma:
-                        sentence = ' '.join(word for word in sentence.split() if word not in stop_words and not word.isdigit())
-                        doc_of_quarter_by_brand_stop.append(sentence)
-
-                    processed_data_by_quarter_by_brand[type_of_review][str(quarter)][brand] = doc_of_quarter_by_brand_stop
-
-        with open('pickle_files/{}.pickle'.format('processed_data_by_quarter'), 'wb') as handle:
-            pickle.dump(processed_data_by_quarter, handle, protocol=pickle.HIGHEST_PROTOCOL)
-
-        with open('pickle_files/{}.pickle'.format('processed_data_by_quarter_by_brand'), 'wb') as handle:
-            pickle.dump(processed_data_by_quarter_by_brand, handle, protocol=pickle.HIGHEST_PROTOCOL)
-
-    return processed_data_by_quarter, processed_data_by_quarter_by_brand
-
-
 def build_single_LDA_model(dict_of_clean_doc, quarter, brand, type_of_review, number_of_topics_range):
     try:
         vectorizer = CountVectorizer(analyzer='word',       
@@ -147,13 +42,8 @@ def build_single_LDA_model(dict_of_clean_doc, quarter, brand, type_of_review, nu
                                 lowercase=True,                   # convert all words to lowercase
                                 token_pattern='[a-zA-Z0-9]{3,}',  # num chars > 3
                                 )
-
-        if brand is None:
-            print("Building LDA model for ... " + str(quarter))
-            doc_clean = dict_of_clean_doc[type_of_review][str(quarter)]
-        else:
-            print("Building LDA model for ... {}, {} ".format(str(quarter), brand))
-            doc_clean = dict_of_clean_doc[type_of_review][str(quarter)][brand]
+        print("Building LDA model for ... {}, {} ".format(str(quarter), brand))
+        doc_clean = dict_of_clean_doc[type_of_review][str(quarter)][brand]
 
         data_vectorized = vectorizer.fit_transform(doc_clean)
 
@@ -212,86 +102,28 @@ def build_single_LDA_model(dict_of_clean_doc, quarter, brand, type_of_review, nu
             topic_keywords_dict['topic ' + str(topic_number+1)]['frequency'] = dominant_topic.count(topic_number)
 
         topic_model_df = pd.DataFrame()
-        if brand is None:
-            for topic in topic_keywords_dict:
-                    for keyword in topic_keywords_dict[topic]['keywords']:
-                        keyword_dict = OrderedDict()
-                        keyword_dict['Quarter'] = str(quarter)
-                        keyword_dict['Type of Review'] = type_of_review.capitalize()
-                        keyword_dict['Topic'] = topic
-                        keyword_dict['Topic Frequency'] = topic_keywords_dict[topic]['frequency']
-                        keyword_dict['Keyword'] = keyword[0]
-                        keyword_dict['Keyword Weight'] = keyword[1]
-                        topic_model_df = topic_model_df.append(keyword_dict, ignore_index=True)
-
-        else:
-            for topic in topic_keywords_dict:
-                    for keyword in topic_keywords_dict[topic]['keywords']:
-                        keyword_dict = OrderedDict()
-                        keyword_dict['Quarter'] = str(quarter)
-                        keyword_dict['Brand'] = brand
-                        keyword_dict['Type of Review'] = type_of_review.capitalize()
-                        keyword_dict['Topic'] = topic
-                        keyword_dict['Topic Frequency'] = topic_keywords_dict[topic]['frequency']
-                        keyword_dict['Keyword'] = keyword[0]
-                        keyword_dict['Keyword Weight'] = keyword[1]
-                        topic_model_df = topic_model_df.append(keyword_dict, ignore_index=True)
-
+        for topic in topic_keywords_dict:
+                for keyword in topic_keywords_dict[topic]['keywords']:
+                    keyword_dict = OrderedDict()
+                    keyword_dict['Quarter'] = str(quarter)
+                    keyword_dict['Brand'] = brand
+                    keyword_dict['Type of Review'] = type_of_review.capitalize()
+                    keyword_dict['Topic'] = topic
+                    keyword_dict['Topic Frequency'] = topic_keywords_dict[topic]['frequency']
+                    keyword_dict['Keyword'] = keyword[0]
+                    keyword_dict['Keyword Weight'] = keyword[1]
+                    topic_model_df = topic_model_df.append(keyword_dict, ignore_index=True)
         return topic_model_df
     except ValueError:
         return pd.DataFrame()
 
-def LDA_topic_modeller_by_quarter_multiprocessing(DF, LIST_OF_ADDITIONAL_STOP_WORDS, LIST_OF_COMMON_WORDS, number_of_topics_range):
+def LDA_topic_modeller_by_quarter_by_brand_multiprocessing(DF, LIST_OF_ADDITIONAL_STOP_WORDS, LIST_OF_COMMON_WORDS, LIST_OF_YEARS_TO_INCLUDE, number_of_topics_range):
     #Read in processed documents from cache, or process new document
-    if os.path.isfile('pickle_files/{}.pickle'.format('processed_data_by_quarter')) and os.path.isfile('pickle_files/{}.pickle'.format('processed_data_by_quarter_by_brand')): 
-        with open('pickle_files/{}.pickle'.format('processed_data_by_quarter'), 'rb') as handle:
-            dict_of_clean_doc_by_quarter = pickle.load(handle)
-    else:
-        dict_of_clean_doc_by_quarter, _ = Preprocessing(DF, LIST_OF_ADDITIONAL_STOP_WORDS, LIST_OF_COMMON_WORDS)
-
-    #Generate list of quarters
-    DF['Date'] = pd.to_datetime(DF['Date'],infer_datetime_format=True)
-    DF['Y-Quarter'] = DF['Date'].dt.to_period("Q")
-    list_of_quarters = DF['Y-Quarter'].unique().tolist()
-    
-    #Limit quarters to those in 2016, 2017, 2018
-    list_of_years_to_include = ['2016','2017','2018']
-    list_of_quarters = [quarter for quarter in list_of_quarters if any(year in str(quarter) for year in list_of_years_to_include)]
-
-    from multiprocessing import Pool, cpu_count, Manager
-    print("{} products found... ".format(str(len(list_of_quarters))))
-    
-    combination_of_brands = []
-    for quarter in list_of_quarters:
-        combination_of_brands += list(itertools.product([str(quarter)], ['positive', 'negative']))
-
-    list_of_arguments = [(dict_of_clean_doc_by_quarter, str(quarter_brand[0]), None, quarter_brand[1], number_of_topics_range) for quarter_brand in combination_of_brands]
-
-    output_df = Manager().list()
-
-    with Pool(processes= cpu_count() * 2) as pool:
-        review_df = pool.starmap(build_single_LDA_model, list_of_arguments)
-
-    output_df = output_df.append(review_df)
-    pool.terminate()
-    pool.join()
-    
-    output_df = pd.concat(review_df, ignore_index = True)
-
-    writer = pd.ExcelWriter('Topic_Modelling/Topic Model Results/LDA Topic Model by Quarter.xlsx')
-    
-    output_df.to_excel(writer,'Topic Model by Quarter')
-    writer.save()
-    writer.close()
-    return
-
-def LDA_topic_modeller_by_quarter_by_brand_multiprocessing(DF, LIST_OF_ADDITIONAL_STOP_WORDS, LIST_OF_COMMON_WORDS, number_of_topics_range):
-    #Read in processed documents from cache, or process new document
-    if os.path.isfile('pickle_files/{}.pickle'.format('processed_data_by_quarter')) and os.path.isfile('pickle_files/{}.pickle'.format('processed_data_by_quarter_by_brand')): 
-        with open('pickle_files/{}.pickle'.format('processed_data_by_quarter_by_brand'), 'rb') as handle_2:
+    if os.path.isfile('pickle_files/processed_data_by_quarter_by_brand.pickle'): 
+        with open('pickle_files/processed_data_by_quarter_by_brand.pickle', 'rb') as handle_2:
             dict_of_clean_doc_by_quarter_by_brand = pickle.load(handle_2)
     else:
-        _, dict_of_clean_doc_by_quarter_by_brand = Preprocessing(DF, LIST_OF_ADDITIONAL_STOP_WORDS, LIST_OF_COMMON_WORDS)
+        dict_of_clean_doc_by_quarter_by_brand = Preprocessing(DF, LIST_OF_ADDITIONAL_STOP_WORDS, LIST_OF_COMMON_WORDS)
 
     #Generate list of quarters
     DF['Date'] = pd.to_datetime(DF['Date'],infer_datetime_format=True)
@@ -299,8 +131,7 @@ def LDA_topic_modeller_by_quarter_by_brand_multiprocessing(DF, LIST_OF_ADDITIONA
     list_of_quarters = DF['Y-Quarter'].unique()
     
     #Limit quarters to those in 2016, 2017, 2018
-    list_of_years_to_include = ['2016','2017','2018']
-    list_of_quarters = [quarter for quarter in list_of_quarters if any(year in str(quarter) for year in list_of_years_to_include)]
+    list_of_quarters = [quarter for quarter in list_of_quarters if any(year in str(quarter) for year in LIST_OF_YEARS_TO_INCLUDE)]
     
     combination_of_brands = []
     for type_of_review in ['positive', 'negative']:
@@ -318,7 +149,6 @@ def LDA_topic_modeller_by_quarter_by_brand_multiprocessing(DF, LIST_OF_ADDITIONA
 
     pool.terminate()
     pool.join()
-    
     
     output_df = pd.concat(review_df, ignore_index = True)    
     

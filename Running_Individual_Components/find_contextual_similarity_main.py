@@ -1,7 +1,9 @@
 #Standard Library Imports
 import os
+import sys
 
 #Python File Imports
+sys.path.append(os.getcwd())
 from Finding_Context_Similarity.context_similarity import construct_similarity_table
 
 #Define the parameters of the model

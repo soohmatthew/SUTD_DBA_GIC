@@ -11,7 +11,8 @@ from Webscraping.Scrapers.amazon import amazon_scrape_to_df
 from Webscraping.Scrapers.walmart import walmart_scrape_to_df
 from Webscraping.Scrapers.bestbuy import bestbuy_scrape_to_df
 ## For Topic Modelling
-from Topic_Modelling.topic_modelling.LDA_GridSearch import LDA_topic_modeller_by_quarter_by_brand_multiprocessing, LDA_topic_modeller_by_quarter_multiprocessing
+from Topic_Modelling.topic_modelling.LDA_GridSearch import LDA_topic_modeller_by_quarter_by_brand_multiprocessing
+from Topic_Modelling.topic_modelling.HDP import HDP_topic_modeller_by_quarter_by_brand
 ## For Finding Context Similarity
 from Finding_Context_Similarity.context_similarity import construct_similarity_table
 
@@ -23,6 +24,7 @@ PATH_TO_REVIEW_DOC = "Webscraping/Review Corpus/Customer Reviews of {}.xlsx".for
 LIST_OF_WORDS_TO_EXCLUDE = ['one', 'two', 'three', 'four', 'five', 'star']
 LIST_OF_COMMON_WORDS = ["good", "great", "love"]
 NUMBER_OF_TOPICS_RANGE = [2,3,4,5]
+LIST_OF_YEARS_TO_INCLUDE = ['2016', '2017', '2018']
 
 # CONTEXT SIMILARITY TABLE CONFIG
 HYPOTHESIS_STATEMENT = 'breakdown'
@@ -73,9 +75,9 @@ LIST_OF_ADDITIONAL_STOP_WORDS = LIST_OF_WORDS_TO_EXCLUDE + SEARCH_TERM.split()
 DF = pd.read_excel(PATH_TO_REVIEW_DOC)
 
 def construct_topic_modelling(DF, LIST_OF_ADDITIONAL_STOP_WORDS, LIST_OF_COMMON_WORDS, NUMBER_OF_TOPICS_RANGE):
-    LDA_topic_modeller_by_quarter_by_brand_multiprocessing(DF, LIST_OF_ADDITIONAL_STOP_WORDS, LIST_OF_COMMON_WORDS, NUMBER_OF_TOPICS_RANGE)
-    LDA_topic_modeller_by_quarter_multiprocessing(DF, LIST_OF_ADDITIONAL_STOP_WORDS, LIST_OF_COMMON_WORDS, NUMBER_OF_TOPICS_RANGE)
-
+    LDA_topic_modeller_by_quarter_by_brand_multiprocessing(DF, LIST_OF_ADDITIONAL_STOP_WORDS, LIST_OF_COMMON_WORDS, LIST_OF_YEARS_TO_INCLUDE, NUMBER_OF_TOPICS_RANGE)
+    HDP_topic_modeller_by_quarter_by_brand(DF, LIST_OF_ADDITIONAL_STOP_WORDS, LIST_OF_COMMON_WORDS, LIST_OF_YEARS_TO_INCLUDE)
+    
 if __name__ == '__main__':
     scrape_to_corpus(SEARCH_TERM)
     construct_topic_modelling(DF, LIST_OF_ADDITIONAL_STOP_WORDS, LIST_OF_COMMON_WORDS, NUMBER_OF_TOPICS_RANGE)
