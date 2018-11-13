@@ -70,7 +70,7 @@ def HDP_topic_modeller_by_quarter_by_brand(DF, LIST_OF_ADDITIONAL_STOP_WORDS, LI
     
     # Constraints for the model
     MAX_NUMBER_OF_TOPICS = 5
-    THRESHOLD_WEIGHT_OF_TOPIC = 0.5
+    THRESHOLD_WEIGHT_OF_TOPIC = 0.25
 
     topic_df = pd.DataFrame()
     count = 0
