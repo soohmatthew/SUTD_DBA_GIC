@@ -62,17 +62,19 @@ python -m spacy download en
 
 <i> For the topic model </i>
 
-2. `PATH_TO_REVIEW_DOC`, where the results of the webscraping is stored. Advised not to change location.
+1. `PATH_TO_REVIEW_DOC`, where the results of the webscraping is stored. Advised not to change location.
 
-3. `LIST_OF_WORDS_TO_EXCLUDE`, to remove any words that may not be useful during the topic modelling process. Default is `['one', 'two', 'three', 'four', 'five', 'star']`.
+2. `LIST_OF_WORDS_TO_EXCLUDE`, to remove any words that may not be useful during the topic modelling process. Default is `['one', 'two', 'three', 'four', 'five', 'star']`.
 
-4. `LIST_OF_COMMON_WORDS`, which is an extension of ```LIST_OF_WORDS_TO_EXCLUDE```, just that it also includes the synonym of the words. Default is `["good", "great", "love"]`.
+3. `LIST_OF_COMMON_WORDS`, which is an extension of ```LIST_OF_WORDS_TO_EXCLUDE```, just that it also includes the synonym of the words. Default is `["good", "great", "love"]`.
 
-5. `NUMBER_OF_TOPICS_RANGE`, a range of number of topics in which the algorithm will search over, to generate the most suitable number of topic for the set of documents. Default is `[2,3,4,5]`
+4. `NUMBER_OF_TOPICS_RANGE`, a range of number of topics in which the algorithm will search over, to generate the most suitable number of topic for the set of documents. Default is `[2,3,4,5]`. <b>Only applicable for the LDA model</b> 
+
+5. `LIST_OF_YEARS_TO_INCLUDE`, the list of years that will be considered when building the model, any year that is not inside this list will be excluded.
 
 <i> For the contextual similarity model </i>
 
-6. `HYPOTHESIS_STATEMENT`, based on what your hypothesis statement is. Default is `breakdown`.
+1. `HYPOTHESIS_STATEMENT`, based on what your hypothesis statement is. Default is `breakdown`.
 
 ```main.py``` can be run through your terminal, once relevant packages and documents have been downloaded and installed, and configured to the appropriate settings.
 
@@ -138,12 +140,7 @@ Topic modelling is implemented with multiprocessing, and should take no more tha
 
 2 Excel Files, ```Topic Model Results/LDA Topic Model by Quarter by Brand.xlsx``` and ```Topic Model Results/LDA Topic Model by Quarter.xlsx```.
 
-
-### 3. Sentiment Analysis 
-
-Currently, we are still working on building Sentiment Analysis Models, testing out various models to determine which has the greatest accuracy. We will be using the Valence Aware Dictionary and sEntiment Reasoner (VADER) library as an accuracy benchmark.
-
-### 4. Contextual Similarity
+### 3. Contextual Similarity
 
 The main script that triggers the Contextual Similarity process is ```find_contextual_similarity_main.py```. Essentially, the algorithm takes in a hypothesis as an input, and compares the hypothesis with the user reviews, and returns similarity score of the hypothesis and the user review. Scores are then aggregated and grouped based on the Quarter and the Brand. Pre-trained word embeddings trained on Wikipedia using fastText were employed, to convert words with similar meaning to have similar representation. fastText was used instead of Word2Vec so that the rare words could be represented as well.
 

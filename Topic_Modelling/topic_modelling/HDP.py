@@ -92,7 +92,6 @@ def HDP_topic_modeller_by_quarter_by_brand(DF, LIST_OF_ADDITIONAL_STOP_WORDS, LI
 
                 hdp_coherence = processed_model_by_brand[type_of_review][quarter][brand][4]
                 topic_list = processed_model_by_brand[type_of_review][quarter][brand][3]
-                hdp_model = processed_model_by_brand[type_of_review][quarter][brand][2]
 
                 # Taking a maximum of 5 topics each, figure out which topic to accept or reject, based on the weight which has to be greater than 0.5
                 topics_nos = [x[0] for x in topic_list ]
