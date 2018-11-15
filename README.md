@@ -180,7 +180,7 @@ Once words were decomposed into their vector representation, user reviews senten
 Contextual Similarity is implemented with multiprocessing in certain steps, thus results can be generated in ~10 minutes.
 
 #### Use of Pre-trained word embeddings
-P. Bojanowski*, E. Grave*, A. Joulin, T. Mikolov, [<i>Enriching Word Vectors with Subword Information</i>](https://arxiv.org/abs/1607.04606)
+
 
 #### Contextual Similarity: Expected Output
 
@@ -191,5 +191,7 @@ P. Bojanowski*, E. Grave*, A. Joulin, T. Mikolov, [<i>Enriching Word Vectors wit
 [Latent Dirichlet Allocation (LDA)](http://jmlr.csail.mit.edu/papers/v3/blei03a.html) <i>Blei, David M.; Ng, Andrew Y.; Jordan, Michael I (January 2003)</i>
 
 [Hierarchical Dirichlet Processes](http://www.gatsby.ucl.ac.uk/~ywteh/research/npbayes/jasa2006.pdf) <i>Yee Whye Teh, Y. W.; Jordan, M. I.; Beal, M. J.; Blei, D. M. (2006).</i>
+
+[Enriching Word Vectors with Subword Information](https://arxiv.org/abs/1607.04606) <i>P. Bojanowski*, E. Grave*, A. Joulin, T. Mikolov, (2016)</i>
 
 
