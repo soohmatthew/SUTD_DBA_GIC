@@ -131,7 +131,6 @@ def check_cosine_similarity(HYPOTHESIS_STATEMENT):
     else:
         return None
 
-
 # Combining everything together
 def construct_similarity_table(HYPOTHESIS_STATEMENT):
     vectorised_reviews_df = check_cosine_similarity(HYPOTHESIS_STATEMENT)

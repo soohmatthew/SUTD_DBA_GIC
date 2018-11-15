@@ -1,6 +1,6 @@
 # Investment Insights with NLP
  
- This is a repository for the <i>40.011 : Data and Business Analytics Project</i>, in collaboration with GIC to build a data pipeline that would gather consumer sentiment on various products. 
+ This is a repository for the <i>40.011 : Data and Business Analytics Project</i>, in collaboration with GIC to build a data pipeline that would gather investment insights on various products.
 
 ## Group Members:
 1. Matthew Soh
@@ -48,13 +48,32 @@ pip install -r requirements.txt
 
 ```
 python -m spacy download en
+python -m spacy download en_core_web_sm
 ```
+
+"en_core_web_sm" model is used for context similarity, while "en" model is used for preprocessing of text for topic modelling.
 
 4. Please download the pre-trained english FastText Word Vector (bin + text) at https://github.com/facebookresearch/fastText/blob/master/pretrained-vectors.md , save it under the Finding_Context_Similarity folder, in the format '.../Finding_Context_Similarity/wiki.en'
 
 ## Usage
 
 ### Configuration of ```main.py```
+
+<i> Flags </i>
+
+1. Individual functions can be turned on or off by passing ```True``` or ```False``` in the following dictionary in ```main.py```
+
+```
+WEBSCRAPER_FLAG = {"AMAZON" : True,
+              "WALMART" : True,
+              "BESTBUY" : True}
+
+TOPIC_MODELLING_FLAG = {"LDA_W_GRIDSEARCH" : True,
+                   "HDP" : True}
+
+CONTEXTUAL_SIMILARITY_FLAG = {"DOC2VEC": True,
+                              "CONTEXTUAL_SIMILARITY_W_FASTTEXT" : True}
+```
 
 <i> For the webscraper </i>
 
@@ -116,29 +135,41 @@ Scraping process will take ~1 hour, depending on how much there is to scrape. Mu
 
 #### Data Collection: Expected Output:
 
-An excel file labelled ```'output corpus/Customer Reviews of SEARCH_TERM.xlsx'``` will be downloaded to your system.
+An excel file labelled ```'Webscraping/Review Corpus/Customer Reviews of SEARCH_TERM.xlsx'``` will be downloaded to your system.
 
 ### 2. Topic Modelling
 
-The main script that triggers the Topic Modelling process is ```topic_model_main.py```. 
+The main script that triggers the Topic Modelling process is ```topic_model_main.py```. This script will take in the output of ```scrape_main.py```, namely ```'Webscraping/Review Corpus/Customer Reviews of SEARCH_TERM.xlsx'``` and generate topic models. 
 
-This script will take in the output of ```scrape_main.py```, namely ```'Review Corpus/Customer Reviews of SEARCH_TERM.xlsx'``` and generate topic models. The algorithm used to generate the topic model is the Latent Dirichlet Allocation (LDA) <i>Blei, David M.; Ng, Andrew Y.; Jordan, Michael I (January 2003)</i>.
+Generally, topic models will produce a list of keywords that most likely form a topic. As it is, the output of these topic modelling algorithms still require some form of interpretation and investors still need to piece the keywords together to form the story. Each keyword is accompanied with a keyword weight, which is the model's interpretation of how important the keyword is in association with the topic. For our implementation, we only take the top 10 keywords, but this can be changed very easily in the code.
 
-Data was first preprocessed, to remove all stopwords, punctuations, and for words to all be lemmatized. Data is then split into different categories, by quarter, and then by brand. The algorithm will generate 2 sets of results, one with reviews categorised by quarter (in order to observe quarterly trends), and the oher one categorised by quarter, by brand (in order to observe quarterly trends, by brand).
+The metric we used to judge the performance of a topic model is using the <b>Coherence Score</b>. Simply put, the coherence score would be calculated based on whether the keywords produced are contextually relevant, either by comparing these words to the corpus or by using word embeddings to generate some average similarity score.
 
-The ```scikit learn``` library was used to generate the LDA model, and the metric used for selecting the best model is lowest perplexity. The ```scikit learn``` library was picked over the ```gensim``` library, due to the ability for the ```scikit learn``` library to apply GridSearch to find the best topic model.
+Raw text was first preprocessed, to remove all stopwords, punctuations, and for words to all be lemmatized. Processed text is then split into different categories, by quarter, and then by brand.
 
-Other algorithms tested were as follows, but did not yield as good results. They can be viewed under ```topic_modelling/Past Testings (Deprecated, for recording purposes)```.
+Several topic models were built using different algorithms. The following algorithms tested did not yield as good results. They can be viewed under ```Topic_Modelling/topic_modelling/Past Testings (Deprecated, for recording purposes```.
 
 1. Latent Semantic Analysis (LSA)
 
 2. k-means Clustering
 
-Topic modelling is implemented with multiprocessing, and should take no more than 1 hour.
+#### 2a. [Latent Dirichlet Allocation (LDA)](https://en.wikipedia.org/wiki/Latent_Dirichlet_allocation)
+
+Latent Dirichlet Allocation (LDA) <i>Blei, David M.; Ng, Andrew Y.; Jordan, Michael I (January 2003)</i> is usually the de facto algorithm that is used for topic modelling, it is tried and tested, and the results are usually reasonable, as long as the model is properly tuned and the corpus used has been preprocessed well <i>(Garbage in, garbage out)</i>. 
+
+LDA requires the user to pre-specify the number of topics that it should search for. Because of this, the ```scikit learn``` library was picked over the ```gensim``` library, due to the ability for the ```scikit learn``` library to apply GridSearch over a range of topic numbers to find the best topic model. The ```scikit learn``` library was used to generate the LDA model, and the metric used for selecting the best model is lowest perplexity (as opposed to coherence, as it was not readily available).
+
+Topic modelling is implemented with multiprocessing, and should take no more than 15 minutes.
+
+#### 2b. [Hierarchical Dirichlet Process (HDP)](https://en.wikipedia.org/wiki/Hierarchical_Dirichlet_process)
+
+Hierarchical Dirichlet Process (HDP) <i>Yee Whye Teh, Y. W.; Jordan, M. I.; Beal, M. J.; Blei, D. M. (2006).</i> was built as an extension of LDA, and has an edge over LDA, in the sense that the user does not need to pre-specify the number of topics that HDP should search over. Instead, it outputs a maximum number of topics, and the user can then choose the important topics. For our current implementation, we use the sum of keyword weights within a topic for the top 10 words, to rank the topics by importance, and set a threshold weight of 0.25 to filter out unimportant topics. We implemented HDP with the help of the ```gensim``` library, and was sorted by quarter by brand, like LDA. We give a coherence score to each topic generated, which can act as a filter for the users. A short and sweet explanation of the difference between HDP and LDA can be found [here](https://datascience.stackexchange.com/a/296)
+
+Topic modelling is not implemented with multiprocessing for HDP, and will take slightly longer to run compared to LDA.
 
 #### Topic Modelling: Expected Output
 
-2 Excel Files, ```Topic Model Results/LDA Topic Model by Quarter by Brand.xlsx``` and ```Topic Model Results/LDA Topic Model by Quarter.xlsx```.
+2 Excel Files, ```Topic_Modelling/Topic Model Results/LDA Topic Model by Quarter by Brand.xlsx``` and ```Topic_Modelling/Topic Model Results/HDP Topic Model by Quarter by Brand.xlsx```.
 
 ### 3. Contextual Similarity
 
@@ -155,7 +186,10 @@ P. Bojanowski*, E. Grave*, A. Joulin, T. Mikolov, [<i>Enriching Word Vectors wit
 
 1 Excel File, ```Finding_Context_Similarity\Similarity Table Results\Similarity Table - 'HYPOTHESIS STATEMENT'.xlsx```
 
-## Future Works
+## References
 
-1. Visualisation
+[Latent Dirichlet Allocation (LDA)](http://jmlr.csail.mit.edu/papers/v3/blei03a.html) <i>Blei, David M.; Ng, Andrew Y.; Jordan, Michael I (January 2003)</i>
+
+[Hierarchical Dirichlet Processes](http://www.gatsby.ucl.ac.uk/~ywteh/research/npbayes/jasa2006.pdf) <i>Yee Whye Teh, Y. W.; Jordan, M. I.; Beal, M. J.; Blei, D. M. (2006).</i>
+
 
