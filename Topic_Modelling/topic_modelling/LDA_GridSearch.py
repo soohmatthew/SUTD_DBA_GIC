@@ -113,6 +113,16 @@ def build_single_LDA_model(dict_of_clean_doc, quarter, brand, type_of_review, nu
                     keyword_dict['Keyword'] = keyword[0]
                     keyword_dict['Keyword Weight'] = keyword[1]
                     topic_model_df = topic_model_df.append(keyword_dict, ignore_index=True)
+        # To normalise keyword weights
+        frames = []
+        for topic in topic_model_df['Topic'].unique():
+            df = topic_model_df[topic_model_df['Topic'] == topic]
+            sum_of_kw_weights = df['Keyword Weight'].sum()
+            def normalise(value):
+                return value/sum_of_kw_weights
+            df['Keyword Weight'] = df['Keyword Weight'].apply(normalise)
+            frames.append(df)
+        topic_model_df = pd.concat(frames, ignore_index = True)
         return topic_model_df
     except ValueError:
         return pd.DataFrame()

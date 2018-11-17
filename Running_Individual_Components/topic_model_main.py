@@ -8,6 +8,7 @@ import pandas as pd
 #Python File Imports
 sys.path.append(os.getcwd())
 from Topic_Modelling.topic_modelling.LDA_GridSearch import LDA_topic_modeller_by_quarter_by_brand_multiprocessing
+from Topic_Modelling.topic_modelling.HDP import HDP_topic_modeller_by_quarter_by_brand
 
 #Define the parameters of the model
 
@@ -26,6 +27,7 @@ DF = pd.read_excel(PATH_TO_REVIEW_DOC)
 
 def main(DF, LIST_OF_ADDITIONAL_STOP_WORDS, LIST_OF_COMMON_WORDS, NUMBER_OF_TOPICS_RANGE):
     LDA_topic_modeller_by_quarter_by_brand_multiprocessing(DF, LIST_OF_ADDITIONAL_STOP_WORDS, LIST_OF_COMMON_WORDS, LIST_OF_YEARS_TO_INCLUDE, NUMBER_OF_TOPICS_RANGE)
+    HDP_topic_modeller_by_quarter_by_brand(DF, LIST_OF_ADDITIONAL_STOP_WORDS, LIST_OF_COMMON_WORDS, LIST_OF_YEARS_TO_INCLUDE)
 
 if __name__ == '__main__':
     main(DF, LIST_OF_ADDITIONAL_STOP_WORDS, LIST_OF_COMMON_WORDS, NUMBER_OF_TOPICS_RANGE)

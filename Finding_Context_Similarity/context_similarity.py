@@ -3,71 +3,106 @@ import re
 import string
 import pickle
 import os
+import itertools
 
 #Third party library imports
 import pandas as pd
-from nltk.tokenize import word_tokenize
-from nltk.corpus import stopwords
+import spacy
+import textacy
+from nltk.stem import WordNetLemmatizer
 import numpy as np
 from gensim.models.fasttext import FastText
 import swifter
 from scipy import spatial
 import openpyxl
-from sklearn.feature_extraction.text import TfidfVectorizer
 
-# Preprocessing of Text for TF-IDF
-def clean_up_corpus(text):
+nlp = spacy.load('en_core_web_sm')
+wordnet_lemmatizer = WordNetLemmatizer()
+
+def decontracted(phrase):
+    # specific
+    phrase = re.sub(r"won't", "will not", phrase)
+    phrase = re.sub(r"can\'t", "can not", phrase)
+
+    # general
+    phrase = re.sub(r"n\'t", " not", phrase)
+    phrase = re.sub(r"\'re", " are", phrase)
+    phrase = re.sub(r"\'s", " is", phrase)
+    phrase = re.sub(r"\'d", " would", phrase)
+    phrase = re.sub(r"\'ll", " will", phrase)
+    phrase = re.sub(r"\'t", " not", phrase)
+    phrase = re.sub(r"\'ve", " have", phrase)
+    phrase = re.sub(r"\'m", " am", phrase)
+    return phrase
+
+def clean_up_corpus(sentence):
+    stop_words = ["is", "the", "are", "a"]
     # 1. Convert to lower case
-    text = text.lower()
+    text = " ".join([text.lower() for text in sentence.split()])
     # 2. Remove non alphabetic characters
-    words = ''.join([i for i in text if not i.isdigit()])
-    return words
+    words = ' '.join([word for word in text.split() if not word.isdigit()])
+    # 3. Remove stopwords
+    words_without_stopwords = ' '.join([word for word in words.split() if word not in stop_words])
+    words_decontracted = decontracted(words_without_stopwords)
+    words_lemmatized = ' '.join([wordnet_lemmatizer.lemmatize(word) for word in words_decontracted.split()])
+    return words_lemmatized
 
-# Preprocessing of Text
-def clean_up_review(text):
-    # 1. Tokenize review
-    tokens = word_tokenize(text)
-    # 2. Convert to lower case
-    tokens = [w.lower() for w in tokens]
-    # 3. Remove punctuation from each word
-    table = str.maketrans('', '', string.punctuation)
-    stripped = [w.translate(table) for w in tokens]
-    # 4. Remove remaining tokens that are not alphabetic
-    words = [word for word in stripped if word.isalpha()]
-    # 5. Filter out stop words
-    stop_words = set(stopwords.words('english'))
-    words = [w for w in words if not w in stop_words]
-    return words
+def noun_phrase_extractor(sentence):
+    spacy_doc = nlp(sentence)
+    list_of_noun_phrase = [np.text for np in spacy_doc.noun_chunks]
+    return list_of_noun_phrase
 
-# Function to average all words vectors in a given sentence
-def avg_sentence_vector(words, en_model, dict_of_words):
-    featureVec = np.zeros((300,), dtype="float32")
-    dict_of_frequencies = {}
+def verb_phrase_extractor(sentence):
+    doc = textacy.Doc(sentence, lang='en_core_web_sm')
+    verb_phrase = r'<VERB>?<ADV | DET>*<VERB>+'
+    list_of_verb_phrase = [list.text for list in textacy.extract.pos_regex_matches(doc, verb_phrase)]
+    return list_of_verb_phrase
 
-    for word in words:
-        if word in dict_of_words and word in en_model:
-            dict_of_frequencies[word] = dict_of_words[word]
+def prepositional_phrase_extractor(sentence):
+    doc = textacy.Doc(sentence, lang='en_core_web_sm')
+    prepositional_phrase = r'<PREP>? <DET>? (<NOUN>+<ADP>)* <NOUN>+'
+    list_of_prepositional_phrase = [list.text for list in textacy.extract.pos_regex_matches(doc, prepositional_phrase)]
+    return list_of_prepositional_phrase
 
-    #Normalise dict_of_frequencies
-    total_freq = sum([dict_of_frequencies[word] for word in dict_of_frequencies])
-    for word in dict_of_frequencies:
-        dict_of_frequencies[word] /= total_freq
+# Figure out if the hypothesis constitutes a noun, verb or prepositional phrase. If multiple phrases detected, return the list with the most phrases.
+def break_down_hypothesis(hypothesis):
+    dict_of_hypothesis_phrases = {"Noun Phrases" : noun_phrase_extractor(hypothesis), 
+                                  "Verb Phrases" : verb_phrase_extractor(hypothesis),
+                                  "Prepositional Phrases" : prepositional_phrase_extractor(hypothesis)}
 
-    for word in words:
-        try:
-            weight_word_vec = en_model.wv[word]/dict_of_frequencies[word]
-            featureVec = np.add(featureVec, weight_word_vec)
-        except KeyError:
-            continue
-    return featureVec
-
-# Returns the vectorised version of the user reviews, as well as the hypothesis statement
-def vectorise_user_comments(PROCESSED_HYPOTHESIS_STATEMENT, REPROCESS = False):
+    output = [(type_of_phrase, list_of_phrases) for type_of_phrase, list_of_phrases in dict_of_hypothesis_phrases.items() if len(list_of_phrases) > 0]
+    if len(output) == 0:
+        print("Unable to pick out any noun phrase, verb phrase or prepositional phrase, try a different hypothesis!")
+        return None, None
+    elif len(output) > 1:
+        length = ("length_check", [])
+        for pair in output:
+            if len(pair[1]) > len(length[1]):
+                length = pair
+        return length
+    else:
+        return output[0]
+    
+# Processes the user comments, and loads the FastText en_model as well.
+def clean_and_load_data(LIST_OF_YEARS_TO_INCLUDE, REPROCESS = False):
+    LIST_OF_YEARS_TO_INCLUDE = [int(year) for year in LIST_OF_YEARS_TO_INCLUDE]
     if REPROCESS == True:
+        print("Reprocessing text data...")
         df = pd.read_excel("Webscraping/Review Corpus/Customer Reviews of coffee machine.xlsx")
         df['Date'] = pd.to_datetime(df['Date'],infer_datetime_format=True)
         df['Y-Quarter'] = df['Date'].dt.to_period("Q")
-        df['User Comment Cleaned'] = df['User Comment'].apply(clean_up_review)
+        df = df[df['Y-Quarter'].dt.year.isin(LIST_OF_YEARS_TO_INCLUDE)]
+        frames = []
+        for brand in df['Brand'].unique():
+            for quarter in df['Y-Quarter'].unique():
+                if df[(df['Y-Quarter'] == quarter) & (df['Brand'] == brand)].shape[0] >= 10:
+                    frames.append(df[(df['Y-Quarter'] == quarter) & (df['Brand'] == brand)])
+        df = pd.concat(frames, ignore_index = True)
+        df['User Comment Cleaned'] = df['User Comment'].swifter.apply(clean_up_corpus)
+        df['User Comment (Noun Phrases)'] = df['User Comment Cleaned'].swifter.apply(noun_phrase_extractor)
+        df['User Comment (Verb Phrases)'] = df['User Comment Cleaned'].swifter.apply(verb_phrase_extractor)
+        df['User Comment (Prepositional Phrases)'] = df['User Comment Cleaned'].swifter.apply(prepositional_phrase_extractor)
+        print("Done processing text data ...")
         with open('pickle_files/{}.pickle'.format('processed_data_for_context'), 'wb') as handle:
             pickle.dump(df, handle, protocol=pickle.HIGHEST_PROTOCOL)
     else:
@@ -81,7 +116,18 @@ def vectorise_user_comments(PROCESSED_HYPOTHESIS_STATEMENT, REPROCESS = False):
             df = pd.read_excel("Webscraping/Review Corpus/Customer Reviews of coffee machine.xlsx")
             df['Date'] = pd.to_datetime(df['Date'],infer_datetime_format=True)
             df['Y-Quarter'] = df['Date'].dt.to_period("Q")
-            df['User Comment Cleaned'] = df['User Comment'].apply(clean_up_review)
+            df = df[df['Y-Quarter'].dt.year.isin(LIST_OF_YEARS_TO_INCLUDE)]
+            frames = []
+            for brand in df['Brand'].unique():
+                for quarter in df['Y-Quarter'].unique():
+                    if df[(df['Y-Quarter'] == quarter) & (df['Brand'] == brand)].shape[0] >= 10:
+                        frames.append(df[(df['Y-Quarter'] == quarter) & (df['Brand'] == brand)])
+            df = pd.concat(frames, ignore_index = True)
+            df['User Comment Cleaned'] = df['User Comment'].swifter.apply(clean_up_corpus)
+            df['User Comment (Noun Phrases)'] = df['User Comment Cleaned'].swifter.apply(noun_phrase_extractor)
+            df['User Comment (Verb Phrases)'] = df['User Comment Cleaned'].swifter.apply(verb_phrase_extractor)
+            df['User Comment (Prepositional Phrases)'] = df['User Comment Cleaned'].swifter.apply(prepositional_phrase_extractor)
+            print("Done processing text data ...")
             with open('pickle_files/{}.pickle'.format('processed_data_for_context'), 'wb') as handle:
                 pickle.dump(df, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
@@ -99,61 +145,97 @@ def vectorise_user_comments(PROCESSED_HYPOTHESIS_STATEMENT, REPROCESS = False):
         else:
             print("Please download the pre-trained english FastText Word Vector (bin + text) at https://github.com/facebookresearch/fastText/blob/master/pretrained-vectors.md , save it under the Finding_Context_Similarity folder, in the format '.../Finding_Context_Similarity/wiki.en'")
             return None, None
-        
-    # Generate TF-IDF matrix
-    corpus = df['User Comment'].tolist()
-    vectorizer = TfidfVectorizer(min_df=1, max_df=.5, stop_words = 'english', preprocessor = clean_up_corpus)
-    vectorizer.fit_transform(corpus)
-    idf = vectorizer.idf_
-    dict_of_words = dict(zip(vectorizer.get_feature_names(), idf))
+    return df, en_model
+
+# Creates a list of all the different possible combinations of 
+def find_max_similarity_score(list_of_phrases, list_of_hypothesis, en_model):
+    combination_of_phrases = list(itertools.product(list_of_phrases, list_of_hypothesis))
+    scores = [compute_cosine_similarity(phrases[0], phrases[1], en_model) for phrases in combination_of_phrases]     
+    return max(scores, default = 0)
+
+# Function to average all words vectors in a given sentence
+def avg_phrase_vector(phrase, en_model):
+    featureVec = np.zeros((300,), dtype="float32")
+    words = phrase.split()
+    length_of_words = len([word for word in words if word in en_model])
     
-    df['User Comment Vectorised'] = df['User Comment Cleaned'].swifter.apply(avg_sentence_vector, en_model = en_model, dict_of_words= dict_of_words)
-    vectorised_hypothesis_statement = avg_sentence_vector(PROCESSED_HYPOTHESIS_STATEMENT , en_model = en_model, dict_of_words = dict_of_words) 
-    return df, vectorised_hypothesis_statement
+    for word in words:
+        if word in en_model:
+            featureVec = np.add(featureVec, en_model.wv[word])
+    featureVec /= length_of_words
+    return featureVec
 
 # Computes cosine similarity of the vectorised user review, and vectorised hypothesis, returns a score
-def compute_cosine_similarity(USER_REVIEW, HYPOTHESIS):
-    return 1 - spatial.distance.cosine(HYPOTHESIS, USER_REVIEW)
+def compute_cosine_similarity(USER_REVIEW, HYPOTHESIS, en_model):
+    USER_REVIEW_VEC = avg_phrase_vector(USER_REVIEW, en_model)
+    HYPOTHESIS_VEC = avg_phrase_vector(HYPOTHESIS, en_model)
+    return 1 - spatial.distance.cosine(HYPOTHESIS_VEC, USER_REVIEW_VEC)
 
-# Implements cosine similarity to dataframe, returns a dataframe with scores
-def check_cosine_similarity(HYPOTHESIS_STATEMENT):
-    # Preprocess hypothesis statement
-    print("Cleaning up hypothesis statement...")
-    processed_hypothesis = clean_up_review(HYPOTHESIS_STATEMENT)
+def apply_cosine_similarity_to_df(hypothesis, LIST_OF_YEARS_TO_INCLUDE, REPROCESS = False):
+    print("Analyzing hypothesis ...")
+    type_of_phrase, list_of_hypothesis_phrases = break_down_hypothesis(hypothesis)
+    print("Hypothesis evaluated: ")
+    print(list_of_hypothesis_phrases)
+    print("Loading reviews and fast Text vectors ...")
+    if list_of_hypothesis_phrases is not None:
+        df, en_model = clean_and_load_data(LIST_OF_YEARS_TO_INCLUDE, REPROCESS)
+        if df is not None:
+            df['Similarity to Hypothesis'] = df['User Comment ({})'.format(type_of_phrase)].swifter.apply(find_max_similarity_score, list_of_hypothesis = list_of_hypothesis_phrases, en_model = en_model)
+            df['Hypothesis'] = hypothesis
+            return df
+        else:
+            return None
 
-    # Create vectorised user comment
-    vectorised_reviews_df, vectorised_hypothesis_statement = vectorise_user_comments(processed_hypothesis)
+def construct_similarity_table(hypothesis, LIST_OF_YEARS_TO_INCLUDE, REPROCESS = False):
+    if isinstance(hypothesis, list):
+        for hypothesis in hypothesis:
+            print(hypothesis)
+            vectorised_reviews_df = apply_cosine_similarity_to_df(hypothesis, LIST_OF_YEARS_TO_INCLUDE, REPROCESS)
 
-    if vectorised_reviews_df is not None:        
-        vectorised_reviews_df["Similarity to Hypothesis"] = vectorised_reviews_df['User Comment Vectorised'].swifter.apply(compute_cosine_similarity, HYPOTHESIS = vectorised_hypothesis_statement)
-        vectorised_reviews_df["Hypothesis"] = HYPOTHESIS_STATEMENT
-        return vectorised_reviews_df
+            if vectorised_reviews_df is not None:
+                # Data Munging to construct table
+                vectorised_reviews_df_sorted = vectorised_reviews_df.sort_values(['Similarity to Hypothesis'], ascending=[False])
+                vectorised_reviews_df_final = vectorised_reviews_df_sorted.groupby(['Y-Quarter', 'Brand'])
+
+                frames = []
+                cols_to_include = ['Y-Quarter', 'Company', 'Brand', 'Name', 'Rating', 'Source', 'User Comment', 'Similarity to Hypothesis' ,'Average Similarity']
+                for key in vectorised_reviews_df_final.groups.keys():
+                    df_sorted_by_brand = vectorised_reviews_df_sorted[(vectorised_reviews_df_sorted['Y-Quarter'] == key[0]) & (vectorised_reviews_df_sorted['Brand'] == key[1])]
+                    df_sorted_by_brand['Average Similarity'] = df_sorted_by_brand['Similarity to Hypothesis'].mean()
+                    df_sorted_by_brand_selected_cols = df_sorted_by_brand.loc[:,cols_to_include]
+                    frames.append(df_sorted_by_brand_selected_cols.head(5))
+
+                output_df = pd.concat(frames, ignore_index = True)
+
+                # Write to excel
+                writer = pd.ExcelWriter("Finding_Context_Similarity/Similarity Table Results/Similarity Table {}.xlsx".format(hypothesis))
+                output_df.to_excel(writer,'Ranked by Quarter by Brand')
+                writer.save()
+                writer.close()
+
+    elif isinstance(hypothesis, str):
+        vectorised_reviews_df = apply_cosine_similarity_to_df(hypothesis, LIST_OF_YEARS_TO_INCLUDE, REPROCESS)
+        if vectorised_reviews_df is not None:
+            # Data Munging to construct table
+            vectorised_reviews_df_sorted = vectorised_reviews_df.sort_values(['Similarity to Hypothesis'], ascending=[False])
+            vectorised_reviews_df_final = vectorised_reviews_df_sorted.groupby(['Y-Quarter', 'Brand'])
+
+            frames = []
+            cols_to_include = ['Y-Quarter', 'Company', 'Brand', 'Name', 'Rating', 'Source', 'User Comment', 'Similarity to Hypothesis' ,'Average Similarity']
+            for key in vectorised_reviews_df_final.groups.keys():
+                df_sorted_by_brand = vectorised_reviews_df_sorted[(vectorised_reviews_df_sorted['Y-Quarter'] == key[0]) & (vectorised_reviews_df_sorted['Brand'] == key[1])]
+                df_sorted_by_brand['Average Similarity'] = df_sorted_by_brand['Similarity to Hypothesis'].mean()
+                df_sorted_by_brand_selected_cols = df_sorted_by_brand.loc[:,cols_to_include]
+                frames.append(df_sorted_by_brand_selected_cols.head(5))
+
+            output_df = pd.concat(frames, ignore_index = True)
+
+            # Write to excel
+            writer = pd.ExcelWriter("Finding_Context_Similarity/Similarity Table Results/Similarity Table {}.xlsx".format(hypothesis))
+            output_df.to_excel(writer,'Ranked by Quarter by Brand')
+            writer.save()
+            writer.close()
+        else:
+            return
     else:
-        return None
-
-# Combining everything together
-def construct_similarity_table(HYPOTHESIS_STATEMENT):
-    vectorised_reviews_df = check_cosine_similarity(HYPOTHESIS_STATEMENT)
-
-    if vectorised_reviews_df is not None:
-        # Data Munging to construct table
-        vectorised_reviews_df_sorted = vectorised_reviews_df.sort_values(['Similarity to Hypothesis'], ascending=[False])
-        vectorised_reviews_df_final = vectorised_reviews_df_sorted.groupby(['Y-Quarter', 'Brand'])
-
-        frames = []
-        cols_to_include = ['Y-Quarter', 'Brand', 'Name', 'Rating', 'Source', 'User Comment', 'Similarity to Hypothesis' ,'Average Similarity']
-        for key in vectorised_reviews_df_final.groups.keys():
-            df_sorted_by_brand = vectorised_reviews_df_sorted[(vectorised_reviews_df_sorted['Y-Quarter'] == key[0]) & (vectorised_reviews_df_sorted['Brand'] == key[1])]
-            df_sorted_by_brand['Average Similarity'] = df_sorted_by_brand['Similarity to Hypothesis'].mean()
-            df_sorted_by_brand_selected_cols = df_sorted_by_brand.loc[:,cols_to_include]
-            frames.append(df_sorted_by_brand_selected_cols.head(5))
-
-        output_df = pd.concat(frames, ignore_index = True)
-        
-        # Write to excel
-        writer = pd.ExcelWriter("Finding_Context_Similarity/Similarity Table Results/Similarity Table - '{}'.xlsx".format(HYPOTHESIS_STATEMENT))
-        output_df.to_excel(writer,'Ranked by Quarter by Brand')
-        writer.save()
-        writer.close()
-    else:
-        return
+        print("Hypothesis statement should be a list or a string.")

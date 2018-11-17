@@ -95,6 +95,8 @@ CONTEXTUAL_SIMILARITY_FLAG = {"DOC2VEC": True,
 
 1. `HYPOTHESIS_STATEMENT`, based on what your hypothesis statement is. Default is `breakdown`.
 
+2. `REPROCESS`, in the event that you have made changes to your review corpus, you can reprocess the review corpus by changing `REPROCESS = True`.
+
 ```main.py``` can be run through your terminal, once relevant packages and documents have been downloaded and installed, and configured to the appropriate settings.
 
 ### Configuration of Individual Scripts
@@ -115,7 +117,6 @@ currentdir = os.getcwd()
 shutil.rmtree(currentdir + '/pickle_files')
 ```
 
-
 ## Methodology
 
 ### 1. Data Collection
@@ -132,6 +133,30 @@ The main script that triggers the Data Collection process is ```scrape_main.py``
 
 The default keyword for ```SEARCH_TERM``` is ```coffee machine```. 
 Scraping process will take ~1 hour, depending on how much there is to scrape. Multiprocessing is available for Amazon and Best Buy.
+
+### Data Collection Results
+
+A total of 18171 reviews were scraped. 'Company' was not scraped from website, but was an important piece of information for the user, thus we input the Company column manually. After data collection, a necessary step would be to input 'Company' as an extra column within the dataset. 
+
+Company	| Brand | Date | Name | Rating | Source | Usefulness | User Comment
+--- | --- |  --- |  --- |  --- |  --- |  --- |  --- |  
+49 unique companies | 61 unique brands | Date range from 2001 to 2018 | Name of the specific product scraped is indicated.| Ratings ranged from 1 to 5, the distribution can be seen below. | 3 unique sources, Amazon, Walmart, Best Buy | How useful the review is, which was not considered for the scope of this project | Actual raw text of customer's reviews.
+
+Distribution of Reviews by Ratings
+
+![alt text](imgs\distributed_by_rank.png "Distribution by Ratings")
+
+Distribution of Reviews by Brand (Only top 10 shown)
+
+![alt text](imgs\most_reviewed.png "Distribution by Brand")
+
+Distribution of Reviews by Source
+
+![alt text](imgs\distribution_by_source.png "Distribution by Source")
+
+Distribution of Reviews by Quarter (Quarter is extracted out from date, and not scraped)
+
+![alt text](imgs\distributed_by_quarter.png "Distribution by Quarter")
 
 #### Data Collection: Expected Output:
 
@@ -167,6 +192,10 @@ Hierarchical Dirichlet Process (HDP) <i>Yee Whye Teh, Y. W.; Jordan, M. I.; Beal
 
 Topic modelling is not implemented with multiprocessing for HDP, and will take slightly longer to run compared to LDA.
 
+#### Topic Modelling: Results
+
+
+
 #### Topic Modelling: Expected Output
 
 2 Excel Files, ```Topic_Modelling/Topic Model Results/LDA Topic Model by Quarter by Brand.xlsx``` and ```Topic_Modelling/Topic Model Results/HDP Topic Model by Quarter by Brand.xlsx```.
@@ -175,12 +204,40 @@ Topic modelling is not implemented with multiprocessing for HDP, and will take s
 
 The main script that triggers the Contextual Similarity process is ```find_contextual_similarity_main.py```. Essentially, the algorithm takes in a hypothesis as an input, and compares the hypothesis with the user reviews, and returns similarity score of the hypothesis and the user review. Scores are then aggregated and grouped based on the Quarter and the Brand. Pre-trained word embeddings trained on Wikipedia using fastText were employed, to convert words with similar meaning to have similar representation. fastText was used instead of Word2Vec so that the rare words could be represented as well.
 
-Once words were decomposed into their vector representation, user reviews sentences were represented by taking the vector sum of all the word vectors composing the sentence, divided by the number of words. The hypothesis is also converted into a vector representation. We then take the cosine similarity of the vectorised user review sentences and the vectorised hypothesis statement.
+We first try to find the best representation for the hypothesis in question. This is done by phrase extraction, which we used regular expression, as well as ```textacy```, to determine if the hypothesis is a noun phrase, verb phrase or prepositional phrase (there are other types of phrases, but we limit it to these 3 for the scope of this project). Usually we hope to see only one type of phrase in the hypothesis, but in the event that there are multiple, we pick the type of phrase based on how many individual phrases are being extracted. 
+
+<b>Example of Phrase Extraction</b>
+
+Review | Noun Phrases | Verb Phrases | Prepositional Phrases
+------ | ----- | ----- | -----
+Don't like the style I did not expect the coffee pod is totally different from what I expected. I prefer K cup if I could choose from the beginning. | style, coffee pod, what, cup | do not like, did not expect, expected, prefer, could choose, beginning | style, coffee pod, what, cup
+
+The review corpus that we have scraped, will also need to be processed. For the use of word embeddings, we preprocess the text slightly differently from what we would do for topic modelling. For instance, we cannot remove all stopwords using the ```NLTK``` library, since it includes words like "not". Negation would completely change the meaning of the word, thus, we have to create our own set of stopwords to process the data. Subsequently, based on the review sentence, we extract out the relevant noun, verb and prepositional phrases as well.
+
+In order to narrow down our search to what is most similar with the hypothesis, if the hypothesis is a noun phrase, we will use only the noun phrases of the review to compare it against the hypothesis, applying the same concept to verb phrases and prepositional phrases. To derive a vector representation of each phrase, the phrase is broken up into words. We then leverage on fastText's pre-trained word vector, to calculate a vector representation of the phrase by taking an average of the word vectors comprising the phrase.
+
+<i> A concise representation of the idea behind word embedding, and how words can be expressed as vectors </i>
+![alt text](imgs\Word-Vectors.png "Word Vectors")
+<i>Credits: [An Intuitive Understanding of Word Embeddings: From Count Vectors to Word2Vec](https://www.analyticsvidhya.com/blog/2017/06/word-embeddings-count-word2veec/)</i>
+
+Once words were decomposed into their vector representation, the hypothesis is also converted into a vector representation. We then iterate through every single possible combination of review phrases and hypothesis phrases, taking the cosine similarity of the vectors. With this list, we are able to get the maximum cosine similarity between the review and the hypothesis. This will be the score that we use to judge the similarity between review and hypothesis.
 
 Contextual Similarity is implemented with multiprocessing in certain steps, thus results can be generated in ~10 minutes.
 
-#### Use of Pre-trained word embeddings
+#### Contextual Similarity: Results
 
+As this is an unsupervised learning problem, we do not have any metrics to determine the accuracy.The current algorithm does a good job extracting out reviews that are similar to the hypothesis, but can give an inaccurate (higher than the average) similarity score for topics that are irrelevant. Average score of a similar review is around 0.8, while average score of an irrelevant review is around 0.35.  
+
+<i> Example: </i>
+
+Review | Similarity Score | Hypothesis | Comment
+----- | ----- | ----- | ----
+Makes a horrible odor when brewing!I have made a couple dozen pots of coffee in hopes of the odor going away or diminishing but it has not. The smell seems to be related to the plastic the appliance is made of. I would have returned it but the cost to ship it back/ the hassle of getting a refund isn't worth it. I hope this review will keep others from the same bad expericence as I. |0.845106483 | refund | Positive example of the review being similar to the hypothesis.
+Defective Product and Poor Customer Service We heard great things about these machines, and decided to purchase one via Amazon after reading good reviews. To provide context, we live overseas in an official government capacity and have a similar status to military members to included a US mailing and shipping address. Our apartment uses standard US wattage. This machine stopped functioning properly within the first month of use, just outside of Amazon's return policy. We did not submit it to heavy usage; on average we would use it once a day. It would make exploding noises and coffee grinds would end up in every cup of coffee. The quantity that it was dispensing was also off every time, despite our attempts to reset it. Upon calling the Nespresso customer service line, they informed us that since we lived abroad, the machine was no longer covered under warranty. After much persuasion, we were able to talk to a manager, who merely suggested we decalcify the machine. We did this, but the problems still persist. If we were to return the product, we would have to pay to have it repaired and for shipping, despite only owning it for a few months. We are very disappointed in the product and in the customer service we received from Nespresso. | 0.569656551 | refund | Positive example of the review having a similar sentiment to the hypothesis.
+Love the machine, could leave the frother I'm obsessed with this. I make at least two lattes a day. I only give it 4 stars because the milk frother is a waste of time and money for me. It doesn't get as hot as I would like so what I do is microwave milk first and then put it in the frother to get a bit warmer and of course, frothy. But if you froth it for more than a few seconds it's too frothy which makes it more of a cappuccino than a latte (from my understanding of what the drinks actually are) which means microwaving the milk first is even more necessary. So, if I could do it over again, I would purchase the machine minus the frother and just buy one of those cheap hand frothers to add just a bit of froth. That being said, if you love very frothy drinks this is perfect for you. Froth. | 0.510653079 | refund | Negative example of an irrelevant review, which should receive a much lower score, however, it got a higher than average score.
+Plain but niceNo complaints....makes good coffee./ dependable and uncomplicated.Very happy with this product! | 0.387510419 | refund | Positive example of an irrelevant review which got a low score.
+
+User must be aware that in crafting the hypothesis, he must not to include any irrelevant words that may throw off the algorithm. E.g. Using ```"coffee machine refunds"``` would cause the algorithm to search for reviews containing phrases relevant to coffee machines, which is more or less every review, results would not be accurate. A more useful hypothesis would be ```"refunds, returns"```, as it captures reviews that are more similar in sentiment to what he is searching for.
 
 #### Contextual Similarity: Expected Output
 

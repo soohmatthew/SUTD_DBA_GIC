@@ -15,7 +15,7 @@ import nltk
 
 #Python File Imports
 sys.path.append(os.getcwd())
-
+nltk.download('wordnet')
 from PreProcessing import Preprocessing
 
 def model_fitting(DF, LIST_OF_ADDITIONAL_STOP_WORDS, LIST_OF_COMMON_WORDS, LIST_OF_YEARS_TO_INCLUDE):
@@ -68,10 +68,9 @@ def return_coherence(hdp_model):
 def HDP_topic_modeller_by_quarter_by_brand(DF, LIST_OF_ADDITIONAL_STOP_WORDS, LIST_OF_COMMON_WORDS, LIST_OF_YEARS_TO_INCLUDE):
     processed_model_by_brand = model_fitting(DF, LIST_OF_ADDITIONAL_STOP_WORDS, LIST_OF_COMMON_WORDS, LIST_OF_YEARS_TO_INCLUDE)
     
-    # Constraints for the model
     MAX_NUMBER_OF_TOPICS = 5
     THRESHOLD_WEIGHT_OF_TOPIC = 0.25
-
+    
     topic_df = pd.DataFrame()
     count = 0
     total_count = 0
@@ -92,6 +91,7 @@ def HDP_topic_modeller_by_quarter_by_brand(DF, LIST_OF_ADDITIONAL_STOP_WORDS, LI
 
                 hdp_coherence = processed_model_by_brand[type_of_review][quarter][brand][4]
                 topic_list = processed_model_by_brand[type_of_review][quarter][brand][3]
+                hdp_model = processed_model_by_brand[type_of_review][quarter][brand][2]
 
                 # Taking a maximum of 5 topics each, figure out which topic to accept or reject, based on the weight which has to be greater than 0.5
                 topics_nos = [x[0] for x in topic_list ]
@@ -125,11 +125,22 @@ def HDP_topic_modeller_by_quarter_by_brand(DF, LIST_OF_ADDITIONAL_STOP_WORDS, LI
                                             'Type of Review': type_of_review,
                                              'Coherence Level' : coherence}
                                 topic_df = topic_df.append(topic_dict, ignore_index=True)
-                
-
-    writer = pd.ExcelWriter('Topic_Modelling/topic_modelling/HDP Topic Model by Quarter by Brand.xlsx')
+        #To normalise keyword weights
+        frames = []
+        def normalise(value):
+            return value/sum_of_kw_weights
+        for type_of_review in topic_df['Type of Review'].unique():
+            for brand in topic_df['Brand'].unique():
+                for quarter in topic_df['Quarter'].unique():
+                    for topic in topic_df['Topic'].unique():
+                        specific_topic_df = topic_df[(topic_df['Quarter'] == quarter) & (topic_df['Brand'] == brand) & (topic_df['Type of Review'] == type_of_review) & (topic_df['Topic'] == topic)]
+                        sum_of_kw_weights = specific_topic_df['Keyword Weight'].sum()
+                        specific_topic_df['Keyword Weight'] = specific_topic_df['Keyword Weight'].apply(normalise)
+                        frames.append(specific_topic_df)
+        topic_df = pd.concat(frames, ignore_index = True)
+    writer = pd.ExcelWriter('Topic_Modelling/Topic Model Results/HDP Topic Model by Quarter by Brand.xlsx')
     topic_df.to_excel(writer,'Topic Model by Quarter by Brand')
     writer.save()
     writer.close()
-
+                
     return topic_df

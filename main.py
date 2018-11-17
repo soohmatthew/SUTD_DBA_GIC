@@ -37,12 +37,12 @@ SEARCH_TERM = "coffee machine"
 PATH_TO_REVIEW_DOC = "Webscraping/Review Corpus/Customer Reviews of {}.xlsx".format(SEARCH_TERM)
 LIST_OF_WORDS_TO_EXCLUDE = ['one', 'two', 'three', 'four', 'five', 'star']
 LIST_OF_COMMON_WORDS = ["good", "great", "love"]
-NUMBER_OF_TOPICS_RANGE = [2,3,4,5]
+NUMBER_OF_TOPICS_RANGE = [2,3,4,5] #This would apply only for LDA, not HDP
 LIST_OF_YEARS_TO_INCLUDE = ['2016', '2017', '2018']
 
 # CONTEXT SIMILARITY TABLE CONFIG
-HYPOTHESIS_STATEMENT = 'breakdown'
-
+HYPOTHESIS_STATEMENT = 'refund returns'
+REPROCESS = False
 #----------------------------------- Webscraping ----------------------------------- 
 
 # Triggers the amazon, bestbuy and walmart webscrapers
@@ -101,7 +101,7 @@ def construct_topic_modelling(DF, LIST_OF_ADDITIONAL_STOP_WORDS, LIST_OF_COMMON_
 def building_similarity_table(HYPOTHESIS_STATEMENT, CONTEXTUAL_SIMILARITY_FLAG):
     if CONTEXTUAL_SIMILARITY_FLAG['CONTEXTUAL_SIMILARITY_W_FASTTEXT'] == True:
         if os.path.isfile("Finding_Context_Similarity/wiki.en/wiki.en.bin"):
-            construct_similarity_table(HYPOTHESIS_STATEMENT)
+            construct_similarity_table(HYPOTHESIS_STATEMENT,LIST_OF_YEARS_TO_INCLUDE, REPROCESS)
         else:
             print("Please download the pre-trained english FastText Word Vector (bin + text) at https://github.com/facebookresearch/fastText/blob/master/pretrained-vectors.md , save it under the Finding_Context_Similarity folder, in the format '.../Finding_Context_Similarity/wiki.en'")
     if CONTEXTUAL_SIMILARITY_FLAG['DOC2VEC'] == True:
