@@ -66,11 +66,11 @@ python -m spacy download en_core_web_sm
 
 ```
 WEBSCRAPER_FLAG = {"AMAZON" : True,
-              "WALMART" : True,
-              "BESTBUY" : True}
+                   "WALMART" : True,
+                   "BESTBUY" : True}
 
 TOPIC_MODELLING_FLAG = {"LDA_W_GRIDSEARCH" : True,
-                   "HDP" : True}
+                        "HDP" : True}
 
 CONTEXTUAL_SIMILARITY_FLAG = {"DOC2VEC": True,
                               "CONTEXTUAL_SIMILARITY_W_FASTTEXT" : True}
