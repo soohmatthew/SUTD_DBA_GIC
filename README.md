@@ -198,27 +198,29 @@ Topic modelling is not implemented with multiprocessing for HDP, and will take s
 We implemented both LDA as well as HDP, to generate topic keywords for the various brands over the different quarters.
 
 <i>Example of Review for LDA </i>
+
 Brand | Keyword | Keyword Weight | Quarter | Topic | Topic Frequency | Type of Review
 --- | --- | --- | --- | --- | --- | --- 
-Keurig |	clean	| 0.091184209	2017Q3 |	Topic 1 | |	14  |	Negative
-Keurig |	year	| 0.088824809	2017Q3 |	Topic 1 | |	14  |	Negative
-Keurig |	piece	| 0.082417471	2017Q3 |	Topic 1 | |	14  |	Negative
-Keurig |	junk	| 0.076799062	2017Q3 |	Topic 1 | |	14  |	Negative
-Keurig |	bad	| 0.068976608	2017Q3 |	Topic 1 | |	14  |	Negative
-Keurig |	work	| 0.066591658	2017Q3 |	Topic 1 | |	14  |	Negative
-Keurig |	product	| 0.065610233	2017Q3 |	Topic 1 | |	14  |	Negative
-Keurig |	time	| 0.065361093	2017Q3 |	Topic 1 | |	14  |	Negative
-Keurig |	disappointed	| 0.062053082	2017Q3 |	Topic 1 | |	14  |	Negative
-Keurig |	cup	| 0.06094961	2017Q3 |	Topic 1 | |	14  |	Negative
-Keurig |	return	| 0.059210699	2017Q3 |	Topic 1 | |	14  |	Negative
-Keurig |	day	| 0.056195302	2017Q3 |	Topic 1 | |	14  |	Negative
-Keurig |	ground	| 0.053198163	2017Q3 |	Topic 1 | |	14  |	Negative
-Keurig |	morning	| 0.052295944	2017Q3 |	Topic 1 | |	14  |	Negative
-Keurig |	coffee	| 0.050332057	2017Q3 |	Topic 1 | |	14  |	Negative
+Keurig |	clean	| 0.091184209	| 2017Q3 |	Topic 1 |  14  |	Negative
+Keurig |	year	| 0.088824809	| 2017Q3 |	Topic 1 |  14  |	Negative
+Keurig |	piece	| 0.082417471	| 2017Q3 |	Topic 1 |  14  |	Negative
+Keurig |	junk	| 0.076799062	| 2017Q3 |	Topic 1 |  14  |	Negative
+Keurig |	bad	| 0.068976608	| 2017Q3 |	Topic 1 |  14  |	Negative
+Keurig |	work	| 0.066591658	| 2017Q3 |	Topic 1 |  14  |	Negative
+Keurig |	product	| 0.065610233	| 2017Q3 |	Topic 1 |  14  |	Negative
+Keurig |	time	| 0.065361093	| 2017Q3 |	Topic 1 |  14  |	Negative
+Keurig |	disappointed	| 0.062053082	| 2017Q3 |	Topic 1 |  14  |	Negative
+Keurig |	cup	| 0.06094961	| 2017Q3 |	Topic 1 |  14  |	Negative
+Keurig |	return	| 0.059210699	| 2017Q3 |	Topic 1 |  14  |	Negative
+Keurig |	day	| 0.056195302	| 2017Q3 |	Topic 1 |  14  |	Negative
+Keurig |	ground	| 0.053198163	| 2017Q3 |	Topic 1 |  14  |	Negative
+Keurig |	morning	| 0.052295944	| 2017Q3 |	Topic 1 |  14  |	Negative
+Keurig |	coffee	| 0.050332057	| 2017Q3 |	Topic 1 |  14  |	Negative
 
 Words such as "return", "disappointed", "bad", "junk", all associated with this brand, suggests that the topic was about the poor quality and customer experience associated with this coffee machine brand. "Topic Frequency" refers to the number of times that this topic was the most salient topic within the reviews related to this brand and quarter. 
 
 <i>Example of Review for HDP </i>
+
 Brand | Coherence Level | Keyword | Keyword Weight | Quarter | Topic | Type of Review
 --- | --- | --- | --- | --- | --- | --- | 
 Mr. Coffee  |	0.359913937 |	expensive |	0.145299841	| 2018Q1 |	Topic 1 |	negative
