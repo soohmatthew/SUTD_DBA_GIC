@@ -21,18 +21,19 @@
 2. Install the following libraries on your system, in order for the code to run. 
 
 ```
-numpy==1.15.3
-textblob==0.15.1
-fake_useragent==0.1.11
-swifter==0.260
-pandas==0.23.0
-lxml==4.2.1
-nltk==3.3
-spacy==2.0.16
-scipy==1.1.0
-gensim==3.6.0
 requests==2.20.0
+fake_useragent==0.1.11
+spacy==2.0.16
+textblob==0.15.1
+nltk==3.3
 openpyxl==2.5.3
+swifter==0.260
+scipy==1.1.0
+lxml==4.2.1
+gensim==3.6.0
+numpy==1.15.3
+textacy==0.6.2
+pandas==0.23.0
 beautifulsoup4==4.6.3
 python_dateutil==2.7.5
 scikit_learn==0.20.0
@@ -194,7 +195,48 @@ Topic modelling is not implemented with multiprocessing for HDP, and will take s
 
 #### Topic Modelling: Results
 
+We implemented both LDA as well as HDP, to generate topic keywords for the various brands over the different quarters.
 
+<i>Example of Review for LDA </i>
+Brand | Keyword | Keyword Weight | Quarter | Topic | Topic Frequency | Type of Review
+--- | --- | --- | --- | --- | --- | --- 
+Keurig |	clean	| 0.091184209	2017Q3 |	Topic 1 | |	14  |	Negative
+Keurig |	year	| 0.088824809	2017Q3 |	Topic 1 | |	14  |	Negative
+Keurig |	piece	| 0.082417471	2017Q3 |	Topic 1 | |	14  |	Negative
+Keurig |	junk	| 0.076799062	2017Q3 |	Topic 1 | |	14  |	Negative
+Keurig |	bad	| 0.068976608	2017Q3 |	Topic 1 | |	14  |	Negative
+Keurig |	work	| 0.066591658	2017Q3 |	Topic 1 | |	14  |	Negative
+Keurig |	product	| 0.065610233	2017Q3 |	Topic 1 | |	14  |	Negative
+Keurig |	time	| 0.065361093	2017Q3 |	Topic 1 | |	14  |	Negative
+Keurig |	disappointed	| 0.062053082	2017Q3 |	Topic 1 | |	14  |	Negative
+Keurig |	cup	| 0.06094961	2017Q3 |	Topic 1 | |	14  |	Negative
+Keurig |	return	| 0.059210699	2017Q3 |	Topic 1 | |	14  |	Negative
+Keurig |	day	| 0.056195302	2017Q3 |	Topic 1 | |	14  |	Negative
+Keurig |	ground	| 0.053198163	2017Q3 |	Topic 1 | |	14  |	Negative
+Keurig |	morning	| 0.052295944	2017Q3 |	Topic 1 | |	14  |	Negative
+Keurig |	coffee	| 0.050332057	2017Q3 |	Topic 1 | |	14  |	Negative
+
+Words such as "return", "disappointed", "bad", "junk", all associated with this brand, suggests that the topic was about the poor quality and customer experience associated with this coffee machine brand. "Topic Frequency" refers to the number of times that this topic was the most salient topic within the reviews related to this brand and quarter. 
+
+<i>Example of Review for HDP </i>
+Brand | Coherence Level | Keyword | Keyword Weight | Quarter | Topic | Type of Review
+--- | --- | --- | --- | --- | --- | --- | 
+Mr. Coffee  |	0.359913937 |	expensive |	0.145299841	| 2018Q1 |	Topic 1 |	negative
+Mr. Coffee  |	0.359913937 |	unhappy |	0.139113643	| 2018Q1 |	Topic 1 |	negative
+Mr. Coffee  |	0.359913937 |	maker |	0.134460531	| 2018Q1 |	Topic 1 |	negative
+Mr. Coffee  |	0.359913937 |	work |	0.107821099	| 2018Q1 |	Topic 1 |	negative
+Mr. Coffee  |	0.359913937 |	people |	0.094577108	| 2018Q1 |	Topic 1 |	negative
+Mr. Coffee  |	0.359913937 |	carafe |	0.085431074	| 2018Q1 |	Topic 1 |	negative
+Mr. Coffee  |	0.359913937 |	box |	0.077815263	| 2018Q1 |	Topic 1 |	negative
+Mr. Coffee  |	0.359913937 |	waste |	0.074525809	| 2018Q1 |	Topic 1 |	negative
+Mr. Coffee  |	0.359913937 |	toss |	0.071628804	| 2018Q1 |	Topic 1 |	negative
+Mr. Coffee  |	0.359913937 |	original |	0.069326828	| 2018Q1 |	Topic 1 |	negative
+
+In this example, the algorithm is able to pick out "carafe", which is a type of coffee maker. According to this review, customers do not seem to be happy about the price of the "carafe" coffee maker.  
+
+*<i> There is a slight difference in the columns for LDA and HDP, this is because different libraries were used with different available implementions. Standardizing the columns would be our next order of business. </i>
+
+Every topic needs to be taken with a pinch of salt, because these algorithms are just probabilistic models that assume a certain consistency in the corpus, which may not be the case all the time. However, using these models, users are able to find out different things that people are talking about when it comes to coffee, and it may give insights or understanding of trends, especially when we compare topics between time periods.
 
 #### Topic Modelling: Expected Output
 
