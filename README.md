@@ -144,19 +144,19 @@ Company	| Brand | Date | Name | Rating | Source | Usefulness | User Comment
 
 Distribution of Reviews by Ratings
 
-![alt text](imgs\distributed_by_rank.png "Distribution by Ratings")
+![alt text](https://github.com/soohmatthew/SUTD_DBA_GIC/blob/master/imgs/distributed_by_rank.png "Distribution by Ratings")
 
 Distribution of Reviews by Brand (Only top 10 shown)
 
-![alt text](imgs\most_reviewed.png "Distribution by Brand")
+![alt text](https://github.com/soohmatthew/SUTD_DBA_GIC/blob/master/imgs/most_reviewed.png "Distribution by Brand")
 
 Distribution of Reviews by Source
 
-![alt text](imgs\distribution_by_source.png "Distribution by Source")
+![alt text](https://github.com/soohmatthew/SUTD_DBA_GIC/blob/master/imgs/distribution_by_source.png "Distribution by Source")
 
 Distribution of Reviews by Quarter (Quarter is extracted out from date, and not scraped)
 
-![alt text](imgs\distributed_by_quarter.png "Distribution by Quarter")
+![alt text](https://github.com/soohmatthew/SUTD_DBA_GIC/blob/master/imgs/distributed_by_quarter.png "Distribution by Quarter")
 
 #### Data Collection: Expected Output:
 
@@ -217,7 +217,7 @@ The review corpus that we have scraped, will also need to be processed. For the 
 In order to narrow down our search to what is most similar with the hypothesis, if the hypothesis is a noun phrase, we will use only the noun phrases of the review to compare it against the hypothesis, applying the same concept to verb phrases and prepositional phrases. To derive a vector representation of each phrase, the phrase is broken up into words. We then leverage on fastText's pre-trained word vector, to calculate a vector representation of the phrase by taking an average of the word vectors comprising the phrase.
 
 <i> A concise representation of the idea behind word embedding, and how words can be expressed as vectors </i>
-![alt text](imgs\Word-Vectors.png "Word Vectors")
+![alt text](https://github.com/soohmatthew/SUTD_DBA_GIC/blob/master/imgs/Word-Vectors.png "Word Vectors")
 <i>Credits: [An Intuitive Understanding of Word Embeddings: From Count Vectors to Word2Vec](https://www.analyticsvidhya.com/blog/2017/06/word-embeddings-count-word2veec/)</i>
 
 Once words were decomposed into their vector representation, the hypothesis is also converted into a vector representation. We then iterate through every single possible combination of review phrases and hypothesis phrases, taking the cosine similarity of the vectors. With this list, we are able to get the maximum cosine similarity between the review and the hypothesis. This will be the score that we use to judge the similarity between review and hypothesis.
