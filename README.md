@@ -52,7 +52,7 @@ python -m spacy download en
 python -m spacy download en_core_web_sm
 ```
 
-"en_core_web_sm" model is used for context similarity, while "en" model is used for preprocessing of text for topic modelling.
+```en_core_web_sm``` model is used for context similarity, while ```en``` model is used for preprocessing of text for topic modelling.
 
 4. Please download the pre-trained english FastText Word Vector (bin + text) at https://github.com/facebookresearch/fastText/blob/master/pretrained-vectors.md , save it under the Finding_Context_Similarity folder, in the format '.../Finding_Context_Similarity/wiki.en'
 
