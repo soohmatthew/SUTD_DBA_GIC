@@ -17,23 +17,6 @@ from scipy import spatial
 import openpyxl
 
 nlp = spacy.load('en_core_web_sm')
-wordnet_lemmatizer = WordNetLemmatizer()
-
-def decontracted(phrase):
-    # specific
-    phrase = re.sub(r"won't", "will not", phrase)
-    phrase = re.sub(r"can\'t", "can not", phrase)
-
-    # general
-    phrase = re.sub(r"n\'t", " not", phrase)
-    phrase = re.sub(r"\'re", " are", phrase)
-    phrase = re.sub(r"\'s", " is", phrase)
-    phrase = re.sub(r"\'d", " would", phrase)
-    phrase = re.sub(r"\'ll", " will", phrase)
-    phrase = re.sub(r"\'t", " not", phrase)
-    phrase = re.sub(r"\'ve", " have", phrase)
-    phrase = re.sub(r"\'m", " am", phrase)
-    return phrase
 
 def clean_up_corpus(sentence):
     stop_words = ["is", "the", "are", "a"]
@@ -41,11 +24,11 @@ def clean_up_corpus(sentence):
     text = " ".join([text.lower() for text in sentence.split()])
     # 2. Remove non alphabetic characters
     words = ' '.join([word for word in text.split() if not word.isdigit()])
-    # 3. Remove stopwords
+    # 3. Lemmatization
+    words = " ".join([word.lemma_ for word in nlp(words) if word.lemma_ not in ['-PRON-']])
+    # 4. Remove stopwords
     words_without_stopwords = ' '.join([word for word in words.split() if word not in stop_words])
-    words_decontracted = decontracted(words_without_stopwords)
-    words_lemmatized = ' '.join([wordnet_lemmatizer.lemmatize(word) for word in words_decontracted.split()])
-    return words_lemmatized
+    return words_without_stopwords
 
 def noun_phrase_extractor(sentence):
     spacy_doc = nlp(sentence)
@@ -109,7 +92,7 @@ def clean_and_load_data(LIST_OF_YEARS_TO_INCLUDE, REPROCESS = False):
         # Load Cleaned up file
         if os.path.isfile('pickle_files/{}.pickle'.format('processed_data_for_context')):
             with open('pickle_files/{}.pickle'.format('processed_data_for_context'), 'rb') as handle:
-                print("Loading from Processed Text from cache...")
+                print("Loading Processed Text from cache...")
                 df = pickle.load(handle)
         else:
             print("Cache not found, processing text data...")
@@ -133,7 +116,7 @@ def clean_and_load_data(LIST_OF_YEARS_TO_INCLUDE, REPROCESS = False):
 
     # Load Fast text pre-trained vectors
     if os.path.isfile('pickle_files/{}.pickle'.format('fast_text_loaded')):
-        print("Loading from Fast Text from cache...")
+        print("Loading Fast Text from cache...")
         with open('pickle_files/{}.pickle'.format('fast_text_loaded'), 'rb') as handle2:
             en_model = pickle.load(handle2)
     else:
