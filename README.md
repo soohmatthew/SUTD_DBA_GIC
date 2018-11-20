@@ -22,18 +22,18 @@
 
 ```
 requests==2.20.0
-fake_useragent==0.1.11
 spacy==2.0.16
-textblob==0.15.1
-nltk==3.3
-openpyxl==2.5.3
-swifter==0.260
-scipy==1.1.0
+fake_useragent==0.1.11
 lxml==4.2.1
 gensim==3.6.0
-numpy==1.15.3
 textacy==0.6.2
+scipy==1.1.0
+textblob==0.15.1
+nltk==3.3
+swifter==0.260
 pandas==0.23.0
+numpy==1.15.3
+openpyxl==2.5.3
 beautifulsoup4==4.6.3
 python_dateutil==2.7.5
 scikit_learn==0.20.0
@@ -96,7 +96,13 @@ CONTEXTUAL_SIMILARITY_FLAG = {"DOC2VEC": True,
 
 1. `HYPOTHESIS_STATEMENT`, based on what your hypothesis statement is. Default is `breakdown`.
 
-2. `REPROCESS`, in the event that you have made changes to your review corpus, you can reprocess the review corpus by changing `REPROCESS = True`.
+2. `THRESHOLD`, the `Overall Similarity Score` is calculated by counting the number of occurences above the stated `THRESHOLD`. The higher the `THRESHOLD`, the stricter the scoring. 
+
+3. `POLARITY BIAS`, in order to get a more accurate prediction of the similarity score, we help the algorithm by giving some context of whether the `HYPOTHESIS_STATEMENT` is a positive statement or a negative statement. For a positive hypothesis, `POLARITY BIAS` will be a positive number and negative for a negative hypothesis. The recommended value of bias should be between -0.2 and 0.2. 
+
+For example, if the user gives the `HYPOTHESIS_STATEMENT` = "faulty", he will set the `POLARITY BIAS` to -0.2, as "faulty" has a negative connotation. This value will raise similarity scores for user comments that the user gave a poor rating, and lower the similarity score for user comments that the user gave a positive rating. 
+
+4. `REPROCESS`, in the event that you have made changes to your review corpus, you can reprocess the review corpus by changing `REPROCESS = True`.
 
 ```main.py``` can be run through your terminal, once relevant packages and documents have been downloaded and installed, and configured to the appropriate settings.
 
@@ -270,18 +276,26 @@ Contextual Similarity is implemented with multiprocessing in certain steps, thus
 
 #### Contextual Similarity: Results
 
-As this is an unsupervised learning problem, we do not have any metrics to determine the accuracy.The current algorithm does a good job extracting out reviews that are similar to the hypothesis, but can give an inaccurate (higher than the average) similarity score for topics that are irrelevant. Average score of a similar review is around 0.8, while average score of an irrelevant review is around 0.35.  
+As this is an unsupervised learning problem, we do not have any metrics to determine the accuracy.The current algorithm does a good job extracting out reviews that are similar to the hypothesis, but can give an inaccurate (higher than the average) similarity score for topics that are irrelevant. Average score of a similar review is around 0.8, while average score of an irrelevant review is around 0.35. 
 
 <i> Example: </i>
 
 Review | Similarity Score | Hypothesis | Comment
------ | ----- | ----- | ----
+----- | ----- | ----- | -------
 Makes a horrible odor when brewing!I have made a couple dozen pots of coffee in hopes of the odor going away or diminishing but it has not. The smell seems to be related to the plastic the appliance is made of. I would have returned it but the cost to ship it back/ the hassle of getting a refund isn't worth it. I hope this review will keep others from the same bad expericence as I. |0.845106483 | refund | Positive example of the review being similar to the hypothesis.
 Defective Product and Poor Customer Service We heard great things about these machines, and decided to purchase one via Amazon after reading good reviews. To provide context, we live overseas in an official government capacity and have a similar status to military members to included a US mailing and shipping address. Our apartment uses standard US wattage. This machine stopped functioning properly within the first month of use, just outside of Amazon's return policy. We did not submit it to heavy usage; on average we would use it once a day. It would make exploding noises and coffee grinds would end up in every cup of coffee. The quantity that it was dispensing was also off every time, despite our attempts to reset it. Upon calling the Nespresso customer service line, they informed us that since we lived abroad, the machine was no longer covered under warranty. After much persuasion, we were able to talk to a manager, who merely suggested we decalcify the machine. We did this, but the problems still persist. If we were to return the product, we would have to pay to have it repaired and for shipping, despite only owning it for a few months. We are very disappointed in the product and in the customer service we received from Nespresso. | 0.569656551 | refund | Positive example of the review having a similar sentiment to the hypothesis.
 Love the machine, could leave the frother I'm obsessed with this. I make at least two lattes a day. I only give it 4 stars because the milk frother is a waste of time and money for me. It doesn't get as hot as I would like so what I do is microwave milk first and then put it in the frother to get a bit warmer and of course, frothy. But if you froth it for more than a few seconds it's too frothy which makes it more of a cappuccino than a latte (from my understanding of what the drinks actually are) which means microwaving the milk first is even more necessary. So, if I could do it over again, I would purchase the machine minus the frother and just buy one of those cheap hand frothers to add just a bit of froth. That being said, if you love very frothy drinks this is perfect for you. Froth. | 0.510653079 | refund | Negative example of an irrelevant review, which should receive a much lower score, however, it got a higher than average score.
 Plain but niceNo complaints....makes good coffee./ dependable and uncomplicated.Very happy with this product! | 0.387510419 | refund | Positive example of an irrelevant review which got a low score.
 
 User must be aware that in crafting the hypothesis, he must not to include any irrelevant words that may throw off the algorithm. E.g. Using ```"coffee machine refunds"``` would cause the algorithm to search for reviews containing phrases relevant to coffee machines, which is more or less every review, results would not be accurate. A more useful hypothesis would be ```"refunds, returns"```, as it captures reviews that are more similar in sentiment to what he is searching for.
+
+<b> Implementation of a Better Scoring System for Similarity to Hypothesis </b>
+
+In order to improve the accuracy of the results, we implemented 2 other parameters, `THRESHOLD` and `POLARITY BIAS`. `POLARITY BIAS` aids the algorithm by adding or subtracting for the similarity score based on whether the review rating corresponds to the hypothesis. For example, if the user gives the `HYPOTHESIS_STATEMENT` = "faulty", he will set the `POLARITY BIAS` to -0.2, as "faulty" has a negative connotation. This value will raise similarity scores for user comments that the user gave a poor rating, and lower the similarity score for user comments that the user gave a positive rating. 
+
+`THRESHOLD` on the other hand, changes the method of scoring, from just an average score, to instead taking the number of occurences that the similarity score increases past the `THRESHOLD`. The higher the `THRESHOLD`, the stricter the scoring.
+
+With these 2 parameters taken into account, we are able to sieve out user reviews that are similar to the hypothesis with greater accuracy.
 
 #### Contextual Similarity: Expected Output
 
@@ -294,5 +308,3 @@ User must be aware that in crafting the hypothesis, he must not to include any i
 [Hierarchical Dirichlet Processes](http://www.gatsby.ucl.ac.uk/~ywteh/research/npbayes/jasa2006.pdf) <i>Yee Whye Teh, Y. W.; Jordan, M. I.; Beal, M. J.; Blei, D. M. (2006).</i>
 
 [Enriching Word Vectors with Subword Information](https://arxiv.org/abs/1607.04606) <i>P. Bojanowski*, E. Grave*, A. Joulin, T. Mikolov, (2016)</i>
-
-

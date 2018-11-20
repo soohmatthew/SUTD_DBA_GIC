@@ -154,7 +154,7 @@ def compute_cosine_similarity(USER_REVIEW, HYPOTHESIS, en_model):
     HYPOTHESIS_VEC = avg_phrase_vector(HYPOTHESIS, en_model)
     return 1 - spatial.distance.cosine(HYPOTHESIS_VEC, USER_REVIEW_VEC)
 
-def apply_cosine_similarity_to_df(hypothesis, LIST_OF_YEARS_TO_INCLUDE, REPROCESS = False):
+def apply_cosine_similarity_to_df(hypothesis, LIST_OF_YEARS_TO_INCLUDE, POLARITY_BIAS, REPROCESS = False):
     print("Analyzing hypothesis ...")
     type_of_phrase, list_of_hypothesis_phrases = break_down_hypothesis(hypothesis)
     print("Hypothesis evaluated: ")
@@ -165,15 +165,20 @@ def apply_cosine_similarity_to_df(hypothesis, LIST_OF_YEARS_TO_INCLUDE, REPROCES
         if df is not None:
             df['Similarity to Hypothesis'] = df['User Comment ({})'.format(type_of_phrase)].swifter.apply(find_max_similarity_score, list_of_hypothesis = list_of_hypothesis_phrases, en_model = en_model)
             df['Hypothesis'] = hypothesis
+
+            # Add polarity bias
+            df.loc[df.Rating >= 4, 'Similarity to Hypothesis'] += POLARITY_BIAS
+            df.loc[df.Rating <= 2, 'Similarity to Hypothesis'] -= POLARITY_BIAS 
+
             return df
         else:
             return None
 
-def construct_similarity_table(hypothesis, LIST_OF_YEARS_TO_INCLUDE, REPROCESS = False):
+def construct_similarity_table(hypothesis, LIST_OF_YEARS_TO_INCLUDE, THRESHOLD, POLARITY_BIAS, REPROCESS = False):
     if isinstance(hypothesis, list):
         for hypothesis in hypothesis:
             print(hypothesis)
-            vectorised_reviews_df = apply_cosine_similarity_to_df(hypothesis, LIST_OF_YEARS_TO_INCLUDE, REPROCESS)
+            vectorised_reviews_df = apply_cosine_similarity_to_df(hypothesis, LIST_OF_YEARS_TO_INCLUDE, POLARITY_BIAS, REPROCESS)
 
             if vectorised_reviews_df is not None:
                 # Data Munging to construct table
@@ -181,10 +186,11 @@ def construct_similarity_table(hypothesis, LIST_OF_YEARS_TO_INCLUDE, REPROCESS =
                 vectorised_reviews_df_final = vectorised_reviews_df_sorted.groupby(['Y-Quarter', 'Brand'])
 
                 frames = []
-                cols_to_include = ['Y-Quarter', 'Company', 'Brand', 'Name', 'Rating', 'Source', 'User Comment', 'Similarity to Hypothesis' ,'Average Similarity']
+                cols_to_include = ['Y-Quarter', 'Company', 'Brand', 'Name', 'Rating', 'Source', 'User Comment', 'Similarity to Hypothesis' ,'Overall Similarity Score']
                 for key in vectorised_reviews_df_final.groups.keys():
                     df_sorted_by_brand = vectorised_reviews_df_sorted[(vectorised_reviews_df_sorted['Y-Quarter'] == key[0]) & (vectorised_reviews_df_sorted['Brand'] == key[1])]
-                    df_sorted_by_brand['Average Similarity'] = df_sorted_by_brand['Similarity to Hypothesis'].mean()
+                    # Overall Similarity Score is calculated by setting a threshold of 0.6, if similarity to hypothesis exceeds the threshold, and the proportion of occurences with respect to total number of reviews by brand by quarter.
+                    df_sorted_by_brand['Overall Similarity Score'] = ((df_sorted_by_brand['Similarity to Hypothesis'] > THRESHOLD) * 1).mean()
                     df_sorted_by_brand_selected_cols = df_sorted_by_brand.loc[:,cols_to_include]
                     frames.append(df_sorted_by_brand_selected_cols.head(5))
 
@@ -197,17 +203,18 @@ def construct_similarity_table(hypothesis, LIST_OF_YEARS_TO_INCLUDE, REPROCESS =
                 writer.close()
 
     elif isinstance(hypothesis, str):
-        vectorised_reviews_df = apply_cosine_similarity_to_df(hypothesis, LIST_OF_YEARS_TO_INCLUDE, REPROCESS)
+        vectorised_reviews_df = apply_cosine_similarity_to_df(hypothesis, LIST_OF_YEARS_TO_INCLUDE, POLARITY_BIAS, REPROCESS)
         if vectorised_reviews_df is not None:
             # Data Munging to construct table
             vectorised_reviews_df_sorted = vectorised_reviews_df.sort_values(['Similarity to Hypothesis'], ascending=[False])
             vectorised_reviews_df_final = vectorised_reviews_df_sorted.groupby(['Y-Quarter', 'Brand'])
 
             frames = []
-            cols_to_include = ['Y-Quarter', 'Company', 'Brand', 'Name', 'Rating', 'Source', 'User Comment', 'Similarity to Hypothesis' ,'Average Similarity']
+            cols_to_include = ['Y-Quarter', 'Company', 'Brand', 'Name', 'Rating', 'Source', 'User Comment', 'Similarity to Hypothesis' ,'Overall Similarity']
             for key in vectorised_reviews_df_final.groups.keys():
                 df_sorted_by_brand = vectorised_reviews_df_sorted[(vectorised_reviews_df_sorted['Y-Quarter'] == key[0]) & (vectorised_reviews_df_sorted['Brand'] == key[1])]
-                df_sorted_by_brand['Average Similarity'] = df_sorted_by_brand['Similarity to Hypothesis'].mean()
+                # Overall Similarity Score is calculated by setting a threshold of 0.6, if similarity to hypothesis exceeds the threshold, and the proportion of occurences with respect to total number of reviews by brand by quarter.
+                df_sorted_by_brand['Overall Similarity Score'] = ((df_sorted_by_brand['Similarity to Hypothesis'] > THRESHOLD) * 1).mean()
                 df_sorted_by_brand_selected_cols = df_sorted_by_brand.loc[:,cols_to_include]
                 frames.append(df_sorted_by_brand_selected_cols.head(5))
 

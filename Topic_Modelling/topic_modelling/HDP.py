@@ -12,6 +12,7 @@ from gensim.models import HdpModel, CoherenceModel
 import pandas as pd
 import numpy as np
 import nltk
+from sklearn.feature_extraction.text import TfidfVectorizer
 
 #Python File Imports
 sys.path.append(os.getcwd())
@@ -40,7 +41,6 @@ def model_fitting(DF, LIST_OF_ADDITIONAL_STOP_WORDS, LIST_OF_COMMON_WORDS, LIST_
                         filtered_dict[type_of_review][quarter][brand] = []
                         for review in dict_of_clean_doc_by_quarter_by_brand[type_of_review][quarter][brand]:
                             filtered_dict[type_of_review][quarter][brand].append(review.split())
-
             else:
                 continue
 
@@ -57,8 +57,9 @@ def model_fitting(DF, LIST_OF_ADDITIONAL_STOP_WORDS, LIST_OF_COMMON_WORDS, LIST_
                 hdpmodel = HdpModel(corpus=corpus, id2word=dictionary, alpha = 1)
                 topic_list = hdpmodel.show_topics(num_topics= -1, num_words = 10, formatted= False)
                 hdp_coherence = CoherenceModel(model = hdpmodel, texts = filtered_dict[type_of_review][quarter][brand],corpus = corpus, coherence='c_v')
+                raw_text = filtered_dict[type_of_review][quarter][brand]
 
-                processed_model_by_brand[type_of_review][quarter][brand] = [dictionary, corpus, hdpmodel, topic_list, hdp_coherence]
+                processed_model_by_brand[type_of_review][quarter][brand] = [dictionary, corpus, hdpmodel, topic_list, hdp_coherence, raw_text]
     return processed_model_by_brand
 
 def return_coherence(hdp_model):
@@ -89,9 +90,14 @@ def HDP_topic_modeller_by_quarter_by_brand(DF, LIST_OF_ADDITIONAL_STOP_WORDS, LI
             for brand in processed_model_by_brand[type_of_review][quarter]:
                 print("Processing ... {} {}".format(brand, quarter))
 
+                raw_text = processed_model_by_brand[type_of_review][quarter][brand][5]
                 hdp_coherence = processed_model_by_brand[type_of_review][quarter][brand][4]
                 topic_list = processed_model_by_brand[type_of_review][quarter][brand][3]
-                hdp_model = processed_model_by_brand[type_of_review][quarter][brand][2]
+
+                vectorizer = TfidfVectorizer(min_df=1, max_df=.5, stop_words = 'english')
+                vectorizer.fit_transform(raw_text)
+                idf = vectorizer.idf_
+                dict_of_words_and_idf = dict(zip(vectorizer.get_feature_names(), idf))
 
                 # Taking a maximum of 5 topics each, figure out which topic to accept or reject, based on the weight which has to be greater than 0.5
                 topics_nos = [x[0] for x in topic_list ]
@@ -120,6 +126,7 @@ def HDP_topic_modeller_by_quarter_by_brand(DF, LIST_OF_ADDITIONAL_STOP_WORDS, LI
                                 topic_dict = {'Brand': brand,
                                             'Keyword': keyword_text,
                                             'Keyword Weight': keyword_weight,
+                                            'Keyword TF-IDF Weight': dict_of_words_and_idf[keyword_text],
                                             'Quarter': quarter,
                                             'Topic': topic,
                                             'Type of Review': type_of_review,
