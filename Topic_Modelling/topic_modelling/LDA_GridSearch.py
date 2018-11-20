@@ -20,6 +20,7 @@ import spacy
 import gensim
 import openpyxl
 from scipy import spatial
+from gensim.models.fasttext import FastText
 
 #Python File Imports
 sys.path.append(os.getcwd())
