@@ -19,6 +19,7 @@ import numpy as np
 import spacy
 import gensim
 import openpyxl
+from scipy import spatial
 
 #Python File Imports
 sys.path.append(os.getcwd())
@@ -44,6 +45,12 @@ def build_single_LDA_model(dict_of_clean_doc, quarter, brand, type_of_review, nu
                                 )
         print("Building LDA model for ... {}, {} ".format(str(quarter), brand))
         doc_clean = dict_of_clean_doc[type_of_review][str(quarter)][brand]
+        
+        # Generate TF-IDF matrix
+        vectorizer = TfidfVectorizer(min_df=1, max_df=.5, stop_words = 'english')
+        vectorizer.fit_transform(doc_clean)
+        idf = vectorizer.idf_
+        dict_of_words_and_idf = dict(zip(vectorizer.get_feature_names(), idf))
 
         data_vectorized = vectorizer.fit_transform(doc_clean)
 
@@ -112,6 +119,10 @@ def build_single_LDA_model(dict_of_clean_doc, quarter, brand, type_of_review, nu
                     keyword_dict['Topic Frequency'] = topic_keywords_dict[topic]['frequency']
                     keyword_dict['Keyword'] = keyword[0]
                     keyword_dict['Keyword Weight'] = keyword[1]
+                    if keyword[0] in dict_of_words_and_idf:
+                        keyword_dict['Keyword TF-IDF weight'] = dict_of_words_and_idf[keyword[0]]
+                    else:
+                        keyword_dict['Keyword TF-IDF weight'] = 0
                     topic_model_df = topic_model_df.append(keyword_dict, ignore_index=True)
         # To normalise keyword weights
         frames = []
@@ -123,11 +134,33 @@ def build_single_LDA_model(dict_of_clean_doc, quarter, brand, type_of_review, nu
             df['Keyword Weight'] = df['Keyword Weight'].apply(normalise)
             frames.append(df)
         topic_model_df = pd.concat(frames, ignore_index = True)
+        
         return topic_model_df
     except ValueError:
         return pd.DataFrame()
+    
+# Function to average all words vectors in a given sentence
+def generate_keyword_similarity(pair, en_model):
 
-def LDA_topic_modeller_by_quarter_by_brand_multiprocessing(DF, LIST_OF_ADDITIONAL_STOP_WORDS, LIST_OF_COMMON_WORDS, LIST_OF_YEARS_TO_INCLUDE, number_of_topics_range):
+    keyword_1 = pair[0]
+    keyword_2 = pair[1]
+    
+    def output_vec(keyword):
+        featureVec = np.zeros((300,), dtype="float32")
+        words = keyword.split()
+        length_of_words = len([word for word in words if word in en_model])
+
+        for word in words:
+            if word in en_model:
+                featureVec = np.add(featureVec, en_model.wv[word])
+        featureVec /= length_of_words
+        return featureVec
+
+    keyword_1_vec = output_vec(keyword_1)
+    keyword_2_vec = output_vec(keyword_2)
+    return 1 - spatial.distance.cosine(keyword_1_vec, keyword_2_vec)
+
+def LDA_topic_modeller_by_quarter_by_brand_multiprocessing(DF, LIST_OF_ADDITIONAL_STOP_WORDS, LIST_OF_COMMON_WORDS, LIST_OF_YEARS_TO_INCLUDE, number_of_topics_range):    
     #Read in processed documents from cache, or process new document
     if os.path.isfile('pickle_files/processed_data_by_quarter_by_brand.pickle'): 
         with open('pickle_files/processed_data_by_quarter_by_brand.pickle', 'rb') as handle_2:
@@ -139,6 +172,7 @@ def LDA_topic_modeller_by_quarter_by_brand_multiprocessing(DF, LIST_OF_ADDITIONA
     DF['Date'] = pd.to_datetime(DF['Date'],infer_datetime_format=True)
     DF['Y-Quarter'] = DF['Date'].dt.to_period("Q")
     list_of_quarters = DF['Y-Quarter'].unique()
+    list_of_brands = DF['Brand'].unique()
     
     #Limit quarters to those in 2016, 2017, 2018
     list_of_quarters = [quarter for quarter in list_of_quarters if any(year in str(quarter) for year in LIST_OF_YEARS_TO_INCLUDE)]
@@ -147,11 +181,11 @@ def LDA_topic_modeller_by_quarter_by_brand_multiprocessing(DF, LIST_OF_ADDITIONA
     for type_of_review in ['positive', 'negative']:
         for quarter in list_of_quarters:
             combination_of_brands += list(itertools.product([str(quarter)], dict_of_clean_doc_by_quarter_by_brand[type_of_review][str(quarter)].keys(), [type_of_review]))
-
+    
     from multiprocessing import Pool, cpu_count, Manager
     print("{} products found... ".format(str(len(combination_of_brands))))
     list_of_arguments = [(dict_of_clean_doc_by_quarter_by_brand, str(quarter_brand[0]), quarter_brand[1], quarter_brand[2], number_of_topics_range) for quarter_brand in combination_of_brands]
-
+    
     output_df = Manager().list()
 
     with Pool(processes= cpu_count() * 2) as pool:
@@ -161,6 +195,45 @@ def LDA_topic_modeller_by_quarter_by_brand_multiprocessing(DF, LIST_OF_ADDITIONA
     pool.join()
     
     output_df = pd.concat(review_df, ignore_index = True)    
+    
+        # Load Fast text pre-trained vectors
+    if os.path.isfile('pickle_files/{}.pickle'.format('fast_text_loaded')):
+        print("Loading from Fast Text from cache...")
+        with open('pickle_files/{}.pickle'.format('fast_text_loaded'), 'rb') as handle2:
+            en_model = pickle.load(handle2)
+    else:
+        if os.path.isfile("Finding_Context_Similarity/wiki.en/wiki.en.bin"):
+            print("Converting Fast Text into FastText Object...")
+            en_model = FastText.load_fasttext_format("Finding_Context_Similarity/wiki.en/wiki.en.bin")
+            with open('pickle_files/{}.pickle'.format('fast_text_loaded'), 'wb') as handle2:
+                pickle.dump(en_model, handle2, protocol=pickle.HIGHEST_PROTOCOL)
+        else:
+            print("Please download the pre-trained english FastText Word Vector (bin + text) at https://github.com/facebookresearch/fastText/blob/master/pretrained-vectors.md , save it under the Finding_Context_Similarity folder, in the format '.../Finding_Context_Similarity/wiki.en'")
+            return None
+    
+    # Calculate Coherence
+    list_of_topics = output_df['Topic'].unique()
+    frames_coherence_added = []
+    
+    for type_of_review in ['Positive', 'Negative']:
+        for quarter in list_of_quarters:
+            for brand in list_of_brands:
+                for topic in list_of_topics:
+                    df_brand = output_df[(output_df['Brand'] == brand) & (output_df['Quarter'] == str(quarter)) & (output_df['Type of Review'] == type_of_review) & (output_df['Topic'] == topic)]
+                    if not df_brand.empty:
+                        print("Generating...")
+                        list_of_keywords = df_brand['Keyword'].tolist()
+                        combination_of_keywords = list(itertools.product(list_of_keywords,list_of_keywords))
+                        combination_of_keywords = [pair for pair in combination_of_keywords if pair[0] != pair[1]]
+                        similarity_scores = [generate_keyword_similarity(pair, en_model) for pair in combination_of_keywords]
+                        try:
+                            average_coherence = sum(similarity_scores)/len(similarity_scores)
+                        except ZeroDivisionError:
+                            average_coherence = 0
+                        df_brand['Coherence Level'] = average_coherence
+                        frames_coherence_added.append(df_brand)
+                        
+    output_df = pd.concat(frames_coherence_added, ignore_index = True)
     
     writer = pd.ExcelWriter('Topic_Modelling/Topic Model Results/LDA Topic Model by Quarter by Brand.xlsx')
     output_df.to_excel(writer,'Topic Model by Quarter by Brand')
