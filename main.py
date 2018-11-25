@@ -103,7 +103,7 @@ def construct_topic_modelling(DF, LIST_OF_ADDITIONAL_STOP_WORDS, LIST_OF_COMMON_
 def building_similarity_table(HYPOTHESIS_STATEMENT, CONTEXTUAL_SIMILARITY_FLAG):
     if CONTEXTUAL_SIMILARITY_FLAG['CONTEXTUAL_SIMILARITY_W_FASTTEXT'] == True:
         if os.path.isfile("Finding_Context_Similarity/wiki.en/wiki.en.bin"):
-            construct_similarity_table(HYPOTHESIS_STATEMENT,LIST_OF_YEARS_TO_INCLUDE, THRESHOLD, POLARITY_BIAS, REPROCESS)
+            construct_similarity_table(HYPOTHESIS_STATEMENT,LIST_OF_YEARS_TO_INCLUDE, THRESHOLD, POLARITY_BIAS, SEARCH_TERM, REPROCESS)
         else:
             print("Please download the pre-trained english FastText Word Vector (bin + text) at https://github.com/facebookresearch/fastText/blob/master/pretrained-vectors.md , save it under the Finding_Context_Similarity folder, in the format '.../Finding_Context_Similarity/wiki.en'")
     if CONTEXTUAL_SIMILARITY_FLAG['DOC2VEC'] == True:
