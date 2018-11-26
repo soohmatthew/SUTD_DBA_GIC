@@ -74,6 +74,8 @@ def build_single_LDA_model(dict_of_clean_doc, quarter, brand, type_of_review, nu
 
             (c) Brand
 
+                (i) Each brand will have a list of processed user reviews (str)
+
         (2) quarter (str): The specific quarter of the user reviews to look at 
 
         (3) brand (str): The specific brand of the user reviews to look at 
