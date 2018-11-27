@@ -17,8 +17,10 @@ from Topic_Modelling.topic_modelling.HDP import HDP_topic_modeller_by_quarter_by
 ## For Finding Context Similarity
 from Finding_Context_Similarity.context_similarity import construct_similarity_table
 
-
+##########################################################################################
 #----------------------------------- OPERATIONS CONFIG ----------------------------------- 
+
+# Set the following flags to true or false to run the following operations
 
 WEBSCRAPER_FLAG = {"AMAZON" : True,
               "WALMART" : True,
@@ -30,20 +32,52 @@ TOPIC_MODELLING_FLAG = {"LDA_W_GRIDSEARCH" : True,
 CONTEXTUAL_SIMILARITY_FLAG = {"CONTEXTUAL_SIMILARITY_W_FASTTEXT" : True}
 
 #----------------------------------- WEB SCRAPER CONFIG ----------------------------------- 
+
+# SEARCH_TERM (str): The term that you want to search for, same term will be used to create the topic model and contextual similarity
+# e.g. SEARCH_TERM = "coffee machine"
 SEARCH_TERM = "coffee machine"
 
 #----------------------------------- TOPIC MODELLING CONFIG -----------------------------------
+
+# PATH_TO_REVIEW_DOC (str): File path of the scraped excel file, advised not to change file path 
+# e.g. PATH_TO_REVIEW_DOC = "Webscraping/Review Corpus/Customer Reviews of {}.xlsx".format(SEARCH_TERM)
 PATH_TO_REVIEW_DOC = "Webscraping/Review Corpus/Customer Reviews of {}.xlsx".format(SEARCH_TERM)
+
+# LIST_OF_WORDS_TO_EXCLUDE (list): Additional list of words to exclude from the topic model 
+# e.g. LIST_OF_WORDS_TO_EXCLUDE = ['one', 'two', 'three', 'four', 'five', 'star']
 LIST_OF_WORDS_TO_EXCLUDE = ['one', 'two', 'three', 'four', 'five', 'star']
+
+# LIST_OF_COMMON_WORDS (list): Additional list of words to exclude, synonyms of words will also be excluded from model
+# e.g. LIST_OF_COMMON_WORDS = ["good", "great", "love"]
 LIST_OF_COMMON_WORDS = ["good", "great", "love"]
-NUMBER_OF_TOPICS_RANGE = [2,3,4,5] #This would apply only for LDA, not HDP
+
+# NUMBER_OF_TOPICS_RANGE (list): List of integers that the GridSearch Algorithm will search over, applicable only for LDA, not HDP
+# e.g. NUMBER_OF_TOPICS_RANGE = [2,3,4,5]
+NUMBER_OF_TOPICS_RANGE = [2,3,4,5]
+
+# LIST_OF_YEARS_TO_INCLUDE (list): List of years (str) to include in the topic model. Years not in list will not be considered.
+# e.g. LIST_OF_YEARS_TO_INCLUDE = ['2016', '2017', '2018']
 LIST_OF_YEARS_TO_INCLUDE = ['2016', '2017', '2018']
 
-# CONTEXT SIMILARITY TABLE CONFIG
+#----------------------------------- CONTEXT SIMILARITY CONFIG -----------------------------------
+
+# HYPOTHESIS_STATEMENT (str): Hypothesis provided will be used to compare with each user review to provide a similarity score
+# e.g. HYPOTHESIS_STATEMENT = 'refund returns'
 HYPOTHESIS_STATEMENT = 'refund returns'
+
+# THRESHOLD (float): Overall Similarity Score is calculated by setting a THRESHOLD (between 0 to 1). If similarity to hypothesis exceeds the THRESHOLD, it is counted as one "occurence". Overall Similarity Score is the proportion of occurences with respect to total number of reviews by brand by quarter.
+# e.g. THRESHOLD = 0.6 
 THRESHOLD = 0.6
+
+# POLARITY_BIAS (float): In order to get a more accurate prediction of the similarity score, we help the algorithm by giving some context of whether the HYPOTHESIS_STATEMENT is a positive statement or a negative statement. For a positive hypothesis, POLARITY BIAS will be a positive number and negative for a negative hypothesis. The recommended value of bias should be between -0.2 and 0.2. The POLARITY BIAS will then be deducted or added to the similarity score.
+# e.g. POLARITY_BIAS = -0.2
 POLARITY_BIAS = -0.2
+
+# REPROCESS (bool): Because the dataset will be preprocessed before we fit it into the model, we save the processed data in a pickle file, with the location and name: 'pickle_files/processed_data_for_context_{}.pickle'.format(SEARCH_TERM), such that if we were to run the code multiple times, we will not have to keep reprocessing the data. If REPROCESS is set to True, even if there is an existing pickle file, we will re-run the preprocessing pipeline. This is usually set to True in the event that the preprocessing pipeline is edited.
+# e.g. REPROCESS = False
 REPROCESS = False
+
+##########################################################################################
 #----------------------------------- Webscraping ----------------------------------- 
 
 # Triggers the amazon, bestbuy and walmart webscrapers
