@@ -65,11 +65,7 @@ def walmart_product_url(keyword):
     Function:
     ---------
 
-        (1) amazon_scrape_to_df calls the amazon_review_scraper, and iterates through all available ASINs, returning a Pandas DataFrame
-
-        (2) Output DataFrame is also saved as a pickle file, for caching purposes.
-
-        (3) NO MULTIPROCESSING
+        (1) walmart_search gathers all the links we are able to access to get product data
 
     Args:
     -----
@@ -77,7 +73,7 @@ def walmart_product_url(keyword):
 
     Returns:
     --------
-        product_url (list): List of all product URLs
+        search_pages (list): List of URLs
     """
     search_url = walmart_search(keyword)
     id_url = []
