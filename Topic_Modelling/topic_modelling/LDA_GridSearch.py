@@ -104,8 +104,10 @@ def build_single_LDA_model(dict_of_clean_doc, quarter, brand, type_of_review, nu
     References:
     -----------
         [1] API Reference:
-        http://www.nltk.org/howto/wordnet.html
-
+        https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.GridSearchCV.html
+        https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.LatentDirichletAllocation.html
+        https://scikit-learn.org/stable/modules/generated/sklearn.feature_extraction.text.CountVectorizer.html
+        https://scikit-learn.org/stable/modules/generated/sklearn.feature_extraction.text.TfidfVectorizer.html
     """
     try:
         print("Building LDA model for ... {}, {} ".format(str(quarter), brand))
