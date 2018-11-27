@@ -27,8 +27,7 @@ WEBSCRAPER_FLAG = {"AMAZON" : True,
 TOPIC_MODELLING_FLAG = {"LDA_W_GRIDSEARCH" : True,
                    "HDP" : True}
 
-CONTEXTUAL_SIMILARITY_FLAG = {"DOC2VEC": True,
-                              "CONTEXTUAL_SIMILARITY_W_FASTTEXT" : True}
+CONTEXTUAL_SIMILARITY_FLAG = {"CONTEXTUAL_SIMILARITY_W_FASTTEXT" : True}
 
 #----------------------------------- WEB SCRAPER CONFIG ----------------------------------- 
 SEARCH_TERM = "coffee machine"
@@ -106,8 +105,6 @@ def building_similarity_table(HYPOTHESIS_STATEMENT, CONTEXTUAL_SIMILARITY_FLAG):
             construct_similarity_table(HYPOTHESIS_STATEMENT,LIST_OF_YEARS_TO_INCLUDE, THRESHOLD, POLARITY_BIAS, SEARCH_TERM, REPROCESS)
         else:
             print("Please download the pre-trained english FastText Word Vector (bin + text) at https://github.com/facebookresearch/fastText/blob/master/pretrained-vectors.md , save it under the Finding_Context_Similarity folder, in the format '.../Finding_Context_Similarity/wiki.en'")
-    if CONTEXTUAL_SIMILARITY_FLAG['DOC2VEC'] == True:
-        pass
     return
 
 if __name__ == '__main__':

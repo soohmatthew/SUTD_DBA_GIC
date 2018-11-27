@@ -15,7 +15,29 @@ import os
 from bs4 import BeautifulSoup as soup
 import pandas as pd
 
+"""
+walmart.py scrapes product information as well as product reviews relevant to the "keyword" that the user specifies.
+
+The main function of interest is "walmart_scrape_to_df", which will allow for the data scraped to be returned as a pandas DataFrame.
+
+Multiprocessing is NOT implemented for walmart.py.
+"""
+
 def walmart_search(keyword):
+    """
+    Function:
+    ---------
+
+        (1) walmart_search gathers all the links we are able to access to get product data
+
+    Args:
+    -----
+        (1) keyword (str): Search term defined by the user
+
+    Returns:
+    --------
+        search_pages (list): List of URLs
+    """
     default_link = 'https://www.walmart.com/search/?page=1&ps=40&query=coffee+machine#searchProductResult'
     uClient = uReq(default_link)
     page_html = uClient.read()
@@ -39,6 +61,24 @@ def walmart_search(keyword):
     return search_pages
 
 def walmart_product_url(keyword):
+    """
+    Function:
+    ---------
+
+        (1) amazon_scrape_to_df calls the amazon_review_scraper, and iterates through all available ASINs, returning a Pandas DataFrame
+
+        (2) Output DataFrame is also saved as a pickle file, for caching purposes.
+
+        (3) NO MULTIPROCESSING
+
+    Args:
+    -----
+        (1) keyword (str): Search term defined by the user
+
+    Returns:
+    --------
+        product_url (list): List of all product URLs
+    """
     search_url = walmart_search(keyword)
     id_url = []
     #get the product id
@@ -61,6 +101,20 @@ def walmart_product_url(keyword):
     return product_url
 
 def walmart_get_brand_name(id_url_element):
+    """
+    Function:
+    ---------
+
+        (1) Functions get the brand name for the "id_url_element"
+
+    Args:
+    -----
+        (1) id_url_element (str): Unique url identifier of product
+
+    Returns:
+    --------
+        brands[0] (str): Brand Name for the "id_url_element" passed in.
+    """
     walmart_product_url = "https://www.walmart.com/ip/{}".format(id_url_element)
     uClient = uReq(walmart_product_url)
     page_html = uClient.read()
@@ -73,6 +127,37 @@ def walmart_get_brand_name(id_url_element):
     return brands[0]
 
 def walmart_scrape_to_df(keyword):
+    """
+    Function:
+    ---------
+
+        (1) walmart_scrape_to_df iterates through all the product urls to retrive the relevant information, stores it in a pandas DataFrame, and returns the Pandas DataFrame
+
+        (2) Output DataFrame is also saved as a pickle file, for caching purposes.
+
+        (3) NO MULTIPROCESSING
+
+    Args:
+    -----
+        (1) keyword (str): Search term defined by the user
+
+    Returns:
+    --------
+        reviews_df (pandas DataFrame): pandas DataFrame with the following columns:
+            (a) Name
+            
+            (b) Rating
+            
+            (c) User Comment
+            
+            (d) Date
+            
+            (e) Brand
+            
+            (f) Usefulness
+            
+            (g) Source
+    """
     my_url_all = walmart_product_url(keyword)
 
     reviews_df = pd.DataFrame()
@@ -126,6 +211,7 @@ def walmart_scrape_to_df(keyword):
                             'User Comment': str(review_title[m].replace(",","/") + review_details[m].replace('\n','').replace(',','/')),
                             'Date': str(date[m]),
                             'Brand': brand_name,
+                            # Unable to get "Usefulness" label, set to 0
                             'Usefulness': 0,
                             'Source': "Walmart"}
                     reviews_df = reviews_df.append(review_dict, ignore_index=True)
