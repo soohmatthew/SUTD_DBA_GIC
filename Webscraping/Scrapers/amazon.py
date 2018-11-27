@@ -102,7 +102,6 @@ def amazon_get_max_page_num(ASIN, user_agent_str):
         last_page_num = max(page_numbers)
     return last_page_num
 
-# amazon_review_scraper scraps for reviews, based on the ASIN given, and the number of pages it is going to scrape.
 def amazon_review_scraper(ASIN, number_of_pages, user_agent_str):
     """
     Function:
@@ -239,7 +238,6 @@ def amazon_review_scraper(ASIN, number_of_pages, user_agent_str):
             continue
     return reviews_df
 
-# 
 def amazon_scrape_to_df(keyword):
     """
     Function:
@@ -305,7 +303,7 @@ def amazon_scrape_to_df_multithreading(keyword):
     Function:
     ---------
 
-        (1) amazon_scrape_to_df calls the amazon_review_scraper, and iterates through all available ASINs, returning a Pandas DataFrame
+        (1) amazon_scrape_to_df_multithreading calls the amazon_df_one_asin, and iterates through all available ASINs, returning a Pandas DataFrame
 
         (2) Output DataFrame is also saved as a pickle file, for caching purposes.
 
