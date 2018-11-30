@@ -16,6 +16,8 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 #Python File Imports
 sys.path.append(os.getcwd())
 nltk.download('wordnet')
+nltk.download('stopwords')
+
 from PreProcessing import Preprocessing
 
 """
@@ -245,8 +247,9 @@ def HDP_topic_modeller_by_quarter_by_brand(DF, LIST_OF_ADDITIONAL_STOP_WORDS, LI
                 topic_list = processed_model_by_brand[type_of_review][quarter][brand][3]
 
                 # Generate TF-IDF matrix using sklearn's TfidfVectorizer
-                vectorizer = TfidfVectorizer(min_df=1, max_df=.5, stop_words = 'english')
-                vectorizer.fit_transform(raw_text)
+                vectorizer = TfidfVectorizer(stop_words = 'english')
+                raw_text_unnested = [word for raw_text_list in raw_text for word in raw_text_list]
+                vectorizer.fit_transform(raw_text_unnested)
                 idf = vectorizer.idf_
                 # Create a dictionary of keywords and their corresponding inverse document frequency (IDF)
                 dict_of_words_and_idf = dict(zip(vectorizer.get_feature_names(), idf))
@@ -278,10 +281,14 @@ def HDP_topic_modeller_by_quarter_by_brand(DF, LIST_OF_ADDITIONAL_STOP_WORDS, LI
                             for keyword in keywords:
                                 keyword_text = keyword[0]
                                 keyword_weight = keyword[1]
+                                try:
+                                    tf_idf_weight = dict_of_words_and_idf[keyword_text]
+                                except KeyError:
+                                    tf_idf_weight = 0
                                 topic_dict = {'Brand': brand,
                                             'Keyword': keyword_text,
                                             'Keyword Weight': keyword_weight,
-                                            'Keyword TF-IDF Weight': dict_of_words_and_idf[keyword_text],
+                                            'Keyword TF-IDF Weight': tf_idf_weight,
                                             'Quarter': quarter,
                                             'Topic': topic,
                                             'Type of Review': type_of_review,
