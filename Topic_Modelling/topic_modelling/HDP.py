@@ -18,7 +18,7 @@ sys.path.append(os.getcwd())
 nltk.download('wordnet')
 nltk.download('stopwords')
 
-from PreProcessing import Preprocessing
+from Topic_Modelling.topic_modelling.PreProcessing import Preprocessing
 
 """
 HDP.py contains the functions needed to prepare and genereate HDP models to get the best topics of a document. There are a few assumptions made during the implementation of this, which will be outlined during the individual functions.

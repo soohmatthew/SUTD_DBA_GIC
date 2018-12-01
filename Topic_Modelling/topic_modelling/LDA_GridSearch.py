@@ -29,15 +29,16 @@ LDA_GridSearch.py contains the functions needed to prepare and genereate LDA mod
 The main function of interest is 'LDA_topic_modeller_by_quarter_by_brand_multiprocessing', which was written with the ability to do multiprocessing.
 """
 
+# Corpus Download necessary to run text processing
+import nltk
+nltk.download('wordnet')
+nltk.download('stopwords')
+
 #Python File Imports
 from Topic_Modelling.topic_modelling.PreProcessing import Preprocessing
 
 # For debugging purposes, we want to add the file path ".../SUTD_DBA_GIC", so that individual functions can be run. If file locations cannot be found, please check if your current working directory is ".../SUTD_DBA_GIC".
 sys.path.append(os.getcwd())
-
-# Corpus Download necessary to run text processing
-import nltk
-nltk.download('wordnet')
 
 class LDAUsingPerplexityScorer(LatentDirichletAllocation):
     """
