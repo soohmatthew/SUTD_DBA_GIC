@@ -248,7 +248,7 @@ def HDP_topic_modeller_by_quarter_by_brand(DF, LIST_OF_ADDITIONAL_STOP_WORDS, LI
 
                 # Generate TF-IDF matrix using sklearn's TfidfVectorizer
                 vectorizer = TfidfVectorizer(stop_words = 'english')
-                raw_text_unnested = [word for raw_text_list in raw_text for word in raw_text_list]
+                raw_text_unnested = [" ".join(sentence) for sentence in raw_text]
                 vectorizer.fit_transform(raw_text_unnested)
                 idf = vectorizer.idf_
                 # Create a dictionary of keywords and their corresponding inverse document frequency (IDF)

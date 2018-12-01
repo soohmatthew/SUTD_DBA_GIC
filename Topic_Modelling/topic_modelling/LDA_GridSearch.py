@@ -13,7 +13,7 @@ from nltk.corpus import stopwords
 from nltk.stem.wordnet import WordNetLemmatizer
 from nltk.corpus import wordnet
 from textblob import TextBlob
-from sklearn.decomposition import LatentDirichletAllocation, TruncatedSVD
+from sklearn.decomposition import LatentDirichletAllocation
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 from sklearn.model_selection import GridSearchCV
 import numpy as np
